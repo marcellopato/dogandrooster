@@ -14,7 +14,7 @@ if (Product::count() === 0) {
     echo "Creating products...\n";
     
     Product::create([
-        'sku' => 'GOLD-1OZ',
+        'sku' => 'GOLD_1OZ',
         'name' => 'Gold 1 Ounce Coin',
         'metal_type' => 'gold',
         'weight_oz' => '1.0000',

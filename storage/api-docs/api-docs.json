@@ -6,6 +6,110 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/checkout": {
+            "post": {
+                "tags": [
+                    "Checkout"
+                ],
+                "summary": "Process checkout for a price quote",
+                "operationId": "cf3dadcde3206331ee7bb6dfb80d50c4",
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "description": "Unique key for idempotent requests",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "quote_id"
+                                ],
+                                "properties": {
+                                    "quote_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Order created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "order_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "payment_intent_id": {
+                                            "type": "string",
+                                            "example": "pi_1234567890"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "pending"
+                                        },
+                                        "total_cents": {
+                                            "type": "integer",
+                                            "example": 410000
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Business logic conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "REQUOTE_REQUIRED",
+                                                "OUT_OF_STOCK"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Idempotency-Key header is required"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/quote": {
             "post": {
                 "tags": [
@@ -25,7 +129,7 @@
                                 "properties": {
                                     "sku": {
                                         "type": "string",
-                                        "example": "GOLD-1OZ"
+                                        "example": "GOLD_1OZ"
                                     },
                                     "qty": {
                                         "type": "integer",
@@ -83,6 +187,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Checkout",
+            "description": "Checkout"
+        },
         {
             "name": "Quotes",
             "description": "Quotes"

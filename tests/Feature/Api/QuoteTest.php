@@ -17,7 +17,7 @@ class QuoteTest extends TestCase
         
         // Create a test product
         Product::create([
-            'sku' => 'GOLD-1OZ',
+            'sku' => 'GOLD_1OZ',
             'name' => 'Gold 1 Ounce Coin',
             'metal_type' => 'gold',
             'weight_oz' => '1.0000',
@@ -38,7 +38,7 @@ class QuoteTest extends TestCase
     public function it_can_generate_a_price_quote()
     {
         $response = $this->postJson('/api/quote', [
-            'sku' => 'GOLD-1OZ',
+            'sku' => 'GOLD_1OZ',
             'qty' => 1,
         ]);
 
@@ -82,7 +82,7 @@ class QuoteTest extends TestCase
     public function it_validates_quantity_bounds()
     {
         $response = $this->postJson('/api/quote', [
-            'sku' => 'GOLD-1OZ',
+            'sku' => 'GOLD_1OZ',
             'qty' => 0, // Invalid quantity
         ]);
 
@@ -90,7 +90,7 @@ class QuoteTest extends TestCase
                 ->assertJsonValidationErrors(['qty']);
 
         $response = $this->postJson('/api/quote', [
-            'sku' => 'GOLD-1OZ',
+            'sku' => 'GOLD_1OZ',
             'qty' => 1001, // Exceeds max
         ]);
 

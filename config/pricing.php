@@ -14,7 +14,7 @@ return [
     'quote_expiry_minutes' => env('QUOTE_EXPIRY_MINUTES', 5),
 
     // Price tolerance in basis points (50 bp = 0.5%)
-    'tolerance_bps' => env('PRICE_TOLERANCE_BPS', 50),
+    'default_tolerance_bps' => env('PRICE_TOLERANCE_BPS', 50),
 
     // Payment webhook secret for HMAC verification
     'payment_webhook_secret' => env('PAYMENT_WEBHOOK_SECRET', ''),

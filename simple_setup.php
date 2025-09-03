@@ -63,7 +63,7 @@ try {
     // Insert sample data
     DB::table('products')->insert([
         [
-            'sku' => 'GOLD-1OZ',
+            'sku' => 'GOLD_1OZ',
             'name' => 'Gold 1 Ounce Coin',
             'metal_type' => 'gold',
             'weight_oz' => 1.0000,

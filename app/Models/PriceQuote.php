@@ -48,6 +48,14 @@ class PriceQuote extends Model
     }
 
     /**
+     * Get the product this quote is for
+     */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    /**
      * Get the spot price this quote is based on
      */
     public function basisSpotPrice(): BelongsTo

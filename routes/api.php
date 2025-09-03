@@ -35,4 +35,5 @@ Route::post('/webhooks/payments', [WebhookController::class, 'handlePayment']);
 Route::prefix('mock-fulfillment')->group(function () {
     Route::get('/availability/{sku}', [MockFulfillmentController::class, 'getAvailability']);
     Route::post('/availability', [MockFulfillmentController::class, 'setAvailability']);
+    Route::post('/reset-inventory', [MockFulfillmentController::class, 'resetInventory']);
 });

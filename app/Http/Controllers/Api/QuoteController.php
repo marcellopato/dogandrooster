@@ -28,7 +28,7 @@ class QuoteController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"sku","qty"},
-     *             @OA\Property(property="sku", type="string", example="GOLD-1OZ"),
+     *             @OA\Property(property="sku", type="string", example="GOLD_1OZ"),
      *             @OA\Property(property="qty", type="integer", example=1)
      *         )
      *     ),
@@ -82,9 +82,10 @@ class QuoteController extends Controller
             // Create the price quote
             $quote = PriceQuote::create(
                 [
-                    'product_id' => $product->id,
+                    'sku' => $sku,
                     'quantity' => $qty,
                     'unit_price_cents' => $unitPriceCents,
+                    'total_price_cents' => $unitPriceCents * $qty,
                     'basis_spot_cents' => $currentSpot->price_per_oz_cents,
                     'basis_version' => $currentSpot->id,
                     'quote_expires_at' => now()->addMinutes(
