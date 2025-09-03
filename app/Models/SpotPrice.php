@@ -34,6 +34,14 @@ class SpotPrice extends Model
     }
 
     /**
+     * Get the latest spot price (most recent)
+     */
+    public static function getLatest(): ?self
+    {
+        return self::orderBy('effective_at', 'desc')->first();
+    }
+
+    /**
      * Set this as the current price for the metal type
      */
     public function setCurrent(): void

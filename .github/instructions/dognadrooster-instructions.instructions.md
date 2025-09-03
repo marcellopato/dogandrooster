@@ -125,8 +125,10 @@ CI must pass: Pint, Larastan (level 6), PHPUnit Feature + Unit.
 - README with setup, trade‑offs, concurrency/idempotency notes, and improvements
 - 3–5 min Loom walkthrough
 
-## Implementation details
+## Implementation details IMPORTANT!!!
 
+- We are on Windows running Docker, so always enter on the container's shell using `docker exec -it <container_name> bash` to execute `php artisan <command>`
+- **ALWAYS execute Laravel commands inside the container:** `docker exec dogandrooster-laravel.test-1 php artisan <command>`
 - Always create a new branch for your work.
 - Delegate code review to CoPilot.
 - Follow the existing code style and conventions.
