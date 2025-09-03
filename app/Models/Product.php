@@ -34,23 +34,16 @@ class Product extends Model
     }
 
     /**
-     * Calculate unit price in cents based on current spot price
+     * Calculate unit price in cents based on spot price
      */
-    public function calculateUnitPrice(): int
+    public function calculateUnitPrice(int $spotPriceCents): int
     {
-        $spotPrice = SpotPrice::getCurrent($this->metal_type);
-        
-        if (!$spotPrice) {
-            throw new \Exception("No current spot price for {$this->metal_type}");
-        }
-
         // unit_price_cents = spot_per_oz_cents * weight_oz + premium_cents
         // Using integer math only
-        $spotCents = $spotPrice->price_per_oz_cents;
         $weightMilliOz = intval(bcmul($this->weight_oz, '10000', 0)); // Convert to milli-ounces
         
         // Calculate: (spot_cents * weight_milli_oz) / 10000 + premium_cents
-        $basePrice = intval(bcdiv(bcmul($spotCents, $weightMilliOz, 0), '10000', 0));
+        $basePrice = intval(bcdiv(bcmul($spotPriceCents, $weightMilliOz, 0), '10000', 0));
         
         return $basePrice + $this->premium_cents;
     }

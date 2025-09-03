@@ -1,0 +1,91 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Precious Metals E-commerce API",
+        "description": "API for precious metals pricing with volatile spot-indexed prices",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/quote": {
+            "post": {
+                "tags": [
+                    "Quotes"
+                ],
+                "summary": "Generate a price quote for precious metals",
+                "operationId": "8433cd4c5a73f6b9be973dda9d518dd0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "sku",
+                                    "qty"
+                                ],
+                                "properties": {
+                                    "sku": {
+                                        "type": "string",
+                                        "example": "GOLD-1OZ"
+                                    },
+                                    "qty": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Quote generated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "quote_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "unit_price_cents": {
+                                            "type": "integer",
+                                            "example": 205000
+                                        },
+                                        "quote_expires_at": {
+                                            "type": "string",
+                                            "example": "2025-09-03T15:30:00.000000Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "PRODUCT_NOT_FOUND"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Quotes",
+            "description": "Quotes"
+        }
+    ]
+}
