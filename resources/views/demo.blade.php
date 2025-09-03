@@ -12,12 +12,6 @@
     </head>
     <body class="bg-gray-100">
         <div id="app" class="min-h-screen py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
-                    Precious Metals E-commerce Demo
-                </h1>
-                <quote-demo></quote-demo>
-            </div>
         </div>
     </body>
 </html>
