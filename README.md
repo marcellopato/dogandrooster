@@ -40,7 +40,7 @@ This project implements a checkout slice for precious metals e-commerce that han
 
 ### 1. Clone the repository
 ```bash
-git clone <repo-url>
+git clone <[repo-url](https://github.com/marcellopato/dogandrooster)>
 cd dogandrooster
 ```
 
