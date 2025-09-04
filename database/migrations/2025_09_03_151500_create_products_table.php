@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('premium_cents'); // Premium in cents over spot price
             $table->boolean('active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['sku', 'active']);
             $table->index('metal_type');
         });

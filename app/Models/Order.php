@@ -30,14 +30,14 @@ class Order extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($order) {
-            if (!$order->order_id) {
+            if (! $order->order_id) {
                 $order->order_id = Str::uuid()->toString();
             }
-            
-            if (!$order->payment_intent_id) {
-                $order->payment_intent_id = 'pi_' . Str::random(20);
+
+            if (! $order->payment_intent_id) {
+                $order->payment_intent_id = 'pi_'.Str::random(20);
             }
         });
     }
@@ -86,11 +86,12 @@ class Order extends Model
      */
     public function transitionTo(string $newStatus): bool
     {
-        if (!$this->canTransitionTo($newStatus)) {
+        if (! $this->canTransitionTo($newStatus)) {
             return false;
         }
 
         $this->update(['status' => $newStatus]);
+
         return true;
     }
 
@@ -103,7 +104,7 @@ class Order extends Model
     ): self {
         // Check for existing order with same idempotency key
         $existingOrder = self::where('idempotency_key', $idempotencyKey)->first();
-        
+
         if ($existingOrder) {
             return $existingOrder;
         }

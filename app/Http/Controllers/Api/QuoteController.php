@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\QuoteRequest;
+use App\Models\PriceQuote;
 use App\Models\Product;
 use App\Models\SpotPrice;
-use App\Models\PriceQuote;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
@@ -24,27 +24,36 @@ class QuoteController extends Controller
      *     path="/api/quote",
      *     summary="Generate a price quote for precious metals",
      *     tags={"Quotes"},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"sku","qty"},
+     *
      *             @OA\Property(property="sku", type="string", example="GOLD_1OZ"),
      *             @OA\Property(property="qty", type="integer", example=1)
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Quote generated successfully",
+     *
      *         @OA\JsonContent(
-     *             @OA\Property(property="quote_id", type="integer", example=1),
+     *
+     *             @OA\Property(property="quote_id", type="string", example="550e8400-e29b-41d4-a716-446655440000"),
      *             @OA\Property(property="unit_price_cents", type="integer", example=205000),
      *             @OA\Property(property="quote_expires_at", type="string", example="2025-09-03T15:30:00.000000Z")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=404,
      *         description="Product not found",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="error", type="string", example="PRODUCT_NOT_FOUND")
      *         )
      *     )
@@ -58,7 +67,7 @@ class QuoteController extends Controller
 
             // Find the product
             $product = Product::where('sku', $sku)->first();
-            if (!$product) {
+            if (! $product) {
                 return response()->json(
                     ['error' => 'PRODUCT_NOT_FOUND'],
                     404
@@ -67,7 +76,7 @@ class QuoteController extends Controller
 
             // Get current spot price
             $currentSpot = SpotPrice::getLatest();
-            if (!$currentSpot) {
+            if (! $currentSpot) {
                 return response()->json(
                     ['error' => 'SPOT_PRICE_UNAVAILABLE'],
                     503

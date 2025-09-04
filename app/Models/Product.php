@@ -41,10 +41,10 @@ class Product extends Model
         // unit_price_cents = spot_per_oz_cents * weight_oz + premium_cents
         // Using integer math only
         $weightMilliOz = intval(bcmul($this->weight_oz, '10000', 0)); // Convert to milli-ounces
-        
+
         // Calculate: (spot_cents * weight_milli_oz) / 10000 + premium_cents
         $basePrice = intval(bcdiv(bcmul($spotPriceCents, $weightMilliOz, 0), '10000', 0));
-        
+
         return $basePrice + $this->premium_cents;
     }
 

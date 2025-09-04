@@ -259,6 +259,104 @@ if (!hash_equals($signature, $providedSignature)) {
 - Frequência de requotes por tolerância
 - Disponibilidade do serviço de fulfillment
 
+## 🧪 Testes Implementados
+
+### Testes Unitários
+
+#### **IntegerMoneyTest** (`tests/Unit/Pricing/`)
+Garante que todos os cálculos de preço usam apenas matemática de inteiros (centavos):
+- ✅ Verifica que `unit_price_cents` é sempre inteiro
+- ✅ Testa cálculos com pesos fracionários (0.5 oz)
+- ✅ Valida múltiplas quantidades
+- ✅ Previne problemas de ponto flutuante
+
+### Testes de Feature
+
+#### **QuoteExpiryTest** (`tests/Feature/Checkout/`)
+Testa expiração de cotações com erro `REQUOTE_REQUIRED`:
+- ✅ Rejeita cotações expiradas (409)
+- ✅ Aceita cotações válidas
+- ✅ Trata tempo exato de expiração como expirado
+- ✅ Manipula tempo UTC corretamente
+
+#### **ToleranceBreachTest** (`tests/Feature/Checkout/`)
+Valida tolerância de movimento do preço spot:
+- ✅ Rejeita quando spot move além da tolerância (409)
+- ✅ Aceita movimento dentro da tolerância
+- ✅ Testa aumentos e diminuições de preço
+- ✅ Calcula basis points corretamente
+
+#### **IdempotencyTest** (`tests/Feature/Checkout/`)
+Garante idempotência com `Idempotency-Key`:
+- ✅ Retorna mesmo `order_id` para chave duplicada
+- ✅ Cria ordens diferentes para chaves diferentes
+- ✅ Manipula requisições concorrentes
+- ✅ Funciona através de diferentes `quote_id`
+
+#### **InventoryCheckTest** (`tests/Feature/Checkout/`)
+Valida verificação de estoque com erro `OUT_OF_STOCK`:
+- ✅ Rejeita quando estoque insuficiente (409)
+- ✅ Rejeita quando quantidade > estoque
+- ✅ Aceita quando quantidade ≤ estoque
+- ✅ Trata erros da API como falta de estoque
+- ✅ Não cria ordens quando falha verificação
+
+#### **SignatureTest** (`tests/Feature/Webhooks/`)
+Testa webhooks com HMAC válido:
+- ✅ Processa `payment_authorized` → status `authorized`
+- ✅ Processa `payment_captured` apenas de `authorized` → `captured`
+- ✅ Rejeita transições ilegais de status
+- ✅ Aceita eventos não suportados sem erro
+- ✅ Rejeita assinatura inválida ou intent desconhecido
+
+#### **InvalidSignatureTest** (`tests/Feature/Webhooks/`)
+Garante retorno de 400 e nenhuma mudança de estado:
+- ✅ Assinatura completamente inválida
+- ✅ Payload adulterado após assinatura
+- ✅ Assinatura malformada (não hex)
+- ✅ Intent desconhecido com assinatura válida
+- ✅ Múltiplas tentativas inválidas preservam estado
+
+#### **TotalsIntegrityTest** (`tests/Feature/Checkout/`)
+Verifica integridade de totais e cálculos:
+- ✅ `orders.total_cents == sum(order_lines.subtotal_cents)`
+- ✅ `order_lines.subtotal_cents == unit_price_cents * quantity`
+- ✅ Funciona com itens únicos e múltiplos
+- ✅ Testa diferentes tipos de produto
+- ✅ Valida grandes quantidades sem erro de arredondamento
+
+### Execução dos Testes
+
+```bash
+# Todos os testes
+docker exec dogandrooster-laravel.test-1 php artisan test
+
+# Apenas testes unitários
+docker exec dogandrooster-laravel.test-1 php artisan test --testsuite=Unit
+
+# Apenas testes de feature
+docker exec dogandrooster-laravel.test-1 php artisan test --testsuite=Feature
+
+# Teste específico
+docker exec dogandrooster-laravel.test-1 php artisan test tests/Unit/Pricing/IntegerMoneyTest.php
+
+# Com cobertura (se configurado)
+docker exec dogandrooster-laravel.test-1 php artisan test --coverage
+```
+
+### Verificação de Qualidade
+
+```bash
+# Laravel Pint (Style)
+docker exec dogandrooster-laravel.test-1 php ./vendor/bin/pint
+
+# Larastan (Static Analysis)
+docker exec dogandrooster-laravel.test-1 php ./vendor/bin/phpstan analyse --level=6
+
+# Executar todos juntos
+docker exec dogandrooster-laravel.test-1 bash -c "php ./vendor/bin/pint && php ./vendor/bin/phpstan analyse --level=6 && php artisan test"
+```
+
 ## 🚧 Melhorias Futuras
 
 ### Com Mais Tempo
@@ -307,3 +405,177 @@ Para dúvidas ou problemas:
 ---
 
 **Desenvolvido com ❤️ usando Laravel + Vue.js + TailwindCSS**
+
+## 🧪 Resultado dos Testes Unitários
+
+### PHP Code Style (Laravel Pint)
+
+```bash
+# ./vendor/bin/pint
+
+  ..✓✓✓✓...........✓.✓✓✓✓✓.........................✓✓✓✓.....✓✓✓✓✓.✓✓.✓.............✓...
+
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Laravel  
+    FIXED   .................................................................................................................................................................................. 85 files, 23 style issues fixed  
+  ✓ app/Http/Controllers/Api/CheckoutController.php no_superfluous_phpdoc_tags, concat_space, method_chaining_indentation, no_trailing_whitespace, phpdoc_separation, phpdoc_trim, not_operator_with_successor_space, blank_l…  
+  ✓ app/Http/Controllers/Api/MockFulfillmentController.php                                                                                                            no_superfluous_phpdoc_tags, phpdoc_trim, ordered_imports  
+  ✓ app/Http/Controllers/Api/QuoteController.php                                                                                                         phpdoc_separation, not_operator_with_successor_space, ordered_imports  
+  ✓ app/Http/Controllers/Api/WebhookController.php    no_superfluous_phpdoc_tags, phpdoc_trim, no_unused_imports, not_operator_with_successor_space, blank_line_before_statement, ordered_imports, no_whitespace_in_blank_line  
+  ✓ app/Http/Requests/Api/CheckoutRequest.php                                                                                                                                          no_superfluous_phpdoc_tags, phpdoc_trim  
+  ✓ app/Models/Order.php                                                                                concat_space, line_ending, not_operator_with_successor_space, blank_line_before_statement, no_whitespace_in_blank_line  
+  ✓ app/Models/OrderLine.php                                                                                          line_ending, not_operator_with_successor_space, blank_line_before_statement, no_whitespace_in_blank_line  
+  ✓ app/Models/PriceQuote.php                                                                                                                  not_operator_with_successor_space, ordered_imports, no_whitespace_in_blank_line  
+  ✓ app/Models/Product.php                                                                                                                                                                         no_whitespace_in_blank_line  
+  ✓ app/Models/SpotPrice.php                                                                                                                         method_chaining_indentation, ordered_imports, no_whitespace_in_blank_line  
+  ✓ database/factories/OrderLineFactory.php                                                                                                                                                        no_whitespace_in_blank_line  
+  ✓ database/factories/PriceQuoteFactory.php                                                                                                                                                       no_whitespace_in_blank_line  
+  ✓ database/factories/ProductFactory.php                                                                                                                                                          no_whitespace_in_blank_line  
+  ✓ database/factories/SpotPriceFactory.php                                                                                                                                 method_argument_space, no_whitespace_in_blank_line  
+  ✓ database/migrations/2025_09_03_151500_create_products_table.php                                                                                class_definition, line_ending, braces_position, no_whitespace_in_blank_line  
+  ✓ database/migrations/2025_09_03_151600_create_spot_prices_table.php                                                                             class_definition, line_ending, braces_position, no_whitespace_in_blank_line  
+  ✓ database/migrations/2025_09_03_151700_create_price_quotes_table.php                                                                            class_definition, line_ending, braces_position, no_whitespace_in_blank_line  
+  ✓ database/migrations/2025_09_03_151800_create_orders_table.php                                                     class_definition, line_ending, method_chaining_indentation, braces_position, no_whitespace_in_blank_line  
+  ✓ database/migrations/2025_09_03_151900_create_order_lines_table.php                                                                             class_definition, line_ending, braces_position, no_whitespace_in_blank_line  
+  ✓ database/seeders/ProductSeeder.php                                                                                                                                                            line_ending, ordered_imports  
+  ✓ database/seeders/SpotPriceSeeder.php                                                                                                line_ending, method_chaining_indentation, ordered_imports, no_whitespace_in_blank_line  
+  ✓ routes/api.php                                                                                                                                                                     no_trailing_whitespace, ordered_imports  
+  ✓ tests/Feature/Webhooks/SignatureTest.php                                                                                                                                                       no_whitespace_in_blank_line  
+```
+
+### Resumo dos Testes
+
+- **85 arquivos** verificados pelo Pint
+- **23 problemas de estilo** corrigidos automaticamente
+- **Cobertura completa** de controllers, models, factories, migrations e seeders
+- **Padrão Laravel** aplicado consistentemente em todo o projeto
+
+### Principais Correções Aplicadas
+
+- **PHPDoc**: Limpeza e padronização de comentários
+- **Espaçamento**: Correção de indentação e espaços em branco
+- **Imports**: Organização e remoção de imports não utilizados
+- **Formatação**: Padronização de quebras de linha e chaves
+- **Operadores**: Espaçamento consistente de operadores
+
+## 🧪 Resultados dos Testes PHPUnit
+
+### Execução Completa dos Testes
+
+```bash
+# php artisan test
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true                                                                                                                                                                                                    0.16s  
+
+   PASS  Tests\Unit\Pricing\IntegerMoneyTest
+  ✓ it calculates unit price with integer cents only                                                                                                                                                                     9.49s  
+  ✓ it uses only integer math in pricing calculation                                                                                                                                                                     0.14s  
+  ✓ it maintains integer precision with multiple quantities                                                                                                                                                              0.13s  
+  ✓ it avoids floating point numbers in pricing                                                                                                                                                                          0.16s  
+
+   PASS  Tests\Feature\Api\CheckoutTest
+  ✓ it requires idempotency key                                                                                                                                                                                          0.36s  
+  ✓ it creates order successfully                                                                                                                                                                                        0.51s  
+  ✓ it enforces idempotency                                                                                                                                                                                              0.21s  
+  ✓ it rejects expired quotes                                                                                                                                                                                            0.20s  
+  ✓ it rejects when price tolerance exceeded                                                                                                                                                                             0.19s  
+  ✓ it validates quote exists                                                                                                                                                                                            0.27s  
+
+   PASS  Tests\Feature\Api\QuoteTest
+  ✓ it can generate a price quote                                                                                                                                                                                        0.23s  
+  ✓ it validates required fields                                                                                                                                                                                         0.19s  
+  ✓ it returns 404 for invalid sku                                                                                                                                                                                       0.18s  
+  ✓ it validates quantity bounds                                                                                                                                                                                         0.20s  
+
+   PASS  Tests\Feature\Checkout\IdempotencyTest
+  ✓ it returns same order for duplicate idempotency key                                                                                                                                                                  0.31s  
+  ✓ it creates different orders for different idempotency keys                                                                                                                                                           0.25s  
+  ✓ it handles concurrent requests with same idempotency key                                                                                                                                                             0.29s  
+  ✓ it enforces idempotency across different quote ids                                                                                                                                                                   0.28s  
+
+   PASS  Tests\Feature\Checkout\InventoryCheckTest
+  ✓ it rejects checkout when insufficient inventory                                                                                                                                                                      0.27s  
+  ✓ it rejects checkout when requested quantity exceeds inventory                                                                                                                                                        0.23s  
+  ✓ it accepts checkout when sufficient inventory available                                                                                                                                                              0.21s  
+  ✓ it accepts checkout when requested quantity equals inventory                                                                                                                                                         0.24s  
+  ✓ it handles fulfillment api errors as out of stock                                                                                                                                                                    0.28s  
+  ✓ it validates inventory before creating order                                                                                                                                                                         0.29s  
+
+   PASS  Tests\Feature\Checkout\QuoteExpiryTest
+  ✓ it rejects expired quotes with requote required error                                                                                                                                                                0.26s  
+  ✓ it accepts quotes that are still valid                                                                                                                                                                               0.24s  
+  ✓ it treats exact expiry time as expired                                                                                                                                                                               0.29s  
+  ✓ it handles utc time correctly for expiry                                                                                                                                                                             0.26s  
+
+   PASS  Tests\Feature\Checkout\ToleranceBreachTest
+  ✓ it rejects quotes when spot moves beyond tolerance                                                                                                                                                                   0.24s  
+  ✓ it accepts quotes when spot moves within tolerance                                                                                                                                                                   0.22s  
+  ✓ it handles spot price decreases beyond tolerance                                                                                                                                                                     0.26s  
+  ✓ it calculates tolerance correctly for different basis points                                                                                                                                                         0.27s  
+
+   PASS  Tests\Feature\Checkout\TotalsIntegrityTest
+  ✓ it ensures order total equals sum of order lines subtotals                                                                                                                                                           0.30s  
+  ✓ it ensures order line subtotal equals unit price times quantity                                                                                                                                                      0.27s  
+  ✓ it maintains integrity with single item orders                                                                                                                                                                       0.22s  
+  ✓ it maintains integrity with different product types                                                                                                                                                                  0.29s  
+  ✓ it maintains integrity with large quantities                                                                                                                                                                         0.25s  
+  ✓ it ensures no rounding errors in calculations                                                                                                                                                                        0.32s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                                                                                                                                                                        0.83s  
+
+   PASS  Tests\Feature\Webhooks\InvalidSignatureTest
+  ✓ it returns 400 for invalid signature and no state change                                                                                                                                                             0.27s  
+  ✓ it returns 400 for tampered payload and no state change                                                                                                                                                              0.26s  
+  ✓ it returns 400 for malformed signature and no state change                                                                                                                                                           0.27s  
+  ✓ it returns 400 for empty signature and no state change                                                                                                                                                               0.28s  
+  ✓ it returns 400 for unknown intent with valid signature and no state change                                                                                                                                           0.23s  
+  ✓ it preserves order state across multiple invalid attempts                                                                                                                                                            0.31s  
+
+   PASS  Tests\Feature\Webhooks\SignatureTest
+  ✓ it processes payment authorized webhook with valid signature                                                                                                                                                         0.29s  
+  ✓ it processes payment captured webhook with valid signature                                                                                                                                                           0.42s  
+  ✓ it only allows payment captured from authorized status                                                                                                                                                               0.22s  
+  ✓ it rejects webhook with invalid signature                                                                                                                                                                            0.21s  
+  ✓ it rejects webhook with unknown payment intent                                                                                                                                                                       0.18s  
+  ✓ it rejects webhook without signature header                                                                                                                                                                          0.24s  
+  ✓ it handles unsupported webhook events                                                                                                                                                                                0.28s  
+
+  Tests:    53 passed (158 assertions)
+  Duration: 25.27s
+```
+
+### 📊 Análise dos Resultados
+
+- **✅ 53 testes passaram** com 100% de sucesso
+- **📈 158 assertions** executadas e validadas
+- **⏱️ 25.27s** de duração total
+- **🎯 0 falhas** - Todos os requisitos implementados
+
+### 🏆 Cobertura de Testes por Categoria
+
+| Categoria | Testes | Status | Funcionalidade Testada |
+|-----------|---------|--------|------------------------|
+| **Unit/ExampleTest** | 1 | ✅ PASS | Testes básicos de sanidade |
+| **Unit/Pricing/IntegerMoneyTest** | 4 | ✅ PASS | Matemática de preços com integers |
+| **Feature/Api/CheckoutTest** | 6 | ✅ PASS | Fluxo principal de checkout da API |
+| **Feature/Api/QuoteTest** | 4 | ✅ PASS | Geração e validação de cotações |
+| **Feature/Checkout/IdempotencyTest** | 4 | ✅ PASS | Chaves de idempotência e concorrência |
+| **Feature/Checkout/InventoryCheckTest** | 6 | ✅ PASS | Validação de estoque via API mock |
+| **Feature/Checkout/QuoteExpiryTest** | 4 | ✅ PASS | Expiração de cotações e UTC |
+| **Feature/Checkout/ToleranceBreachTest** | 4 | ✅ PASS | Validação de tolerância de preços |
+| **Feature/Checkout/TotalsIntegrityTest** | 6 | ✅ PASS | Integridade dos cálculos de totais |
+| **Feature/ExampleTest** | 1 | ✅ PASS | Testes de integração básicos |
+| **Feature/Webhooks/InvalidSignatureTest** | 6 | ✅ PASS | Segurança de webhooks (casos negativos) |
+| **Feature/Webhooks/SignatureTest** | 7 | ✅ PASS | Segurança de webhooks (casos positivos) |
+
+### 🔍 Requisitos Funcionais Validados
+
+✅ **Quote Generation** - Cotações com cálculo correto de preços usando matemática de inteiros  
+✅ **Quote Expiry** - Validação de expiração em 5 minutos com UTC  
+✅ **Price Tolerance** - Verificação de basis points para volatilidade do mercado  
+✅ **Inventory Check** - Integração com API mock de fulfillment  
+✅ **Idempotent Checkout** - Transações seguras com chaves de idempotência  
+✅ **Payment Webhooks** - Verificação HMAC e transições de status válidas  
+✅ **Error Handling** - Códigos HTTP corretos e mensagens de erro apropriadas  
+✅ **Data Integrity** - Consistência de totais e cálculos matemáticos
