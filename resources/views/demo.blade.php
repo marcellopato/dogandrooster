@@ -6,8 +6,8 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
-        <!-- JS bundle (served via Vite/build) -->
-        @vite(['resources/js/app.js'])
+        <!-- CSS and JS bundle (served via Vite/build) -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="bg-gray-100">
         <div id="app" class="min-h-screen py-12">
