@@ -28,10 +28,10 @@ class OrderLine extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($orderLine) {
             // Auto-calculate subtotal if not provided
-            if (!$orderLine->subtotal_cents) {
+            if (! $orderLine->subtotal_cents) {
                 $orderLine->subtotal_cents = $orderLine->quantity * $orderLine->unit_price_cents;
             }
         });
@@ -59,6 +59,7 @@ class OrderLine extends Model
     public function verifySubtotal(): bool
     {
         $expectedSubtotal = $this->quantity * $this->unit_price_cents;
+
         return $this->subtotal_cents === $expectedSubtotal;
     }
 }

@@ -19,10 +19,10 @@ return new class extends Migration
             $table->integer('unit_price_cents'); // Price per unit in cents
             $table->integer('subtotal_cents'); // quantity * unit_price_cents
             $table->timestamps();
-            
+
             $table->index(['order_id']);
             $table->index(['sku']);
-            
+
             $table->foreign('order_id')->references('id')->on('orders');
         });
     }

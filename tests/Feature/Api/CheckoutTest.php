@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Api;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use App\Models\Order;
+use App\Models\PriceQuote;
 use App\Models\Product;
 use App\Models\SpotPrice;
-use App\Models\PriceQuote;
-use App\Models\Order;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class CheckoutTest extends TestCase
 {
@@ -16,23 +16,12 @@ class CheckoutTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
-        // Create test data
-        Product::create([
-            'sku' => 'GOLD_1OZ',
-            'name' => 'Gold 1 Ounce Coin',
-            'metal_type' => 'gold',
-            'weight_oz' => '1.0000',
-            'premium_cents' => 5000,
-            'active' => true,
-        ]);
 
-        SpotPrice::create([
-            'metal_type' => 'gold',
-            'price_per_oz_cents' => 200000, // $2000
-            'effective_at' => now(),
-            'is_current' => true,
-        ]);
+        // Seed the database with test data
+        $this->seed();
+
+        // Mock fulfillment API to return available stock
+        $this->mockFulfillmentAvailability('GOLD_1OZ', 10);
     }
 
     /** @test */
@@ -41,13 +30,13 @@ class CheckoutTest extends TestCase
         $quote = $this->createTestQuote();
 
         $response = $this->postJson('/api/checkout', [
-            'quote_id' => $quote->id,
+            'quote_id' => $quote->quote_id,
         ]);
 
         $response->assertStatus(400)
-                ->assertJson([
-                    'error' => 'Idempotency-Key header is required',
-                ]);
+            ->assertJson([
+                'error' => 'Idempotency-Key header is required',
+            ]);
     }
 
     /** @test */
@@ -56,18 +45,18 @@ class CheckoutTest extends TestCase
         $quote = $this->createTestQuote();
 
         $response = $this->postJson('/api/checkout', [
-            'quote_id' => $quote->id,
+            'quote_id' => $quote->quote_id,
         ], [
             'Idempotency-Key' => 'test-12345',
         ]);
 
         $response->assertStatus(201)
-                ->assertJsonStructure([
-                    'order_id',
-                    'payment_intent_id',
-                    'status',
-                    'total_cents',
-                ]);
+            ->assertJsonStructure([
+                'order_id',
+                'payment_intent_id',
+                'status',
+                'total_cents',
+            ]);
 
         // Verify order was created
         $this->assertDatabaseHas('orders', [
@@ -92,7 +81,7 @@ class CheckoutTest extends TestCase
 
         // First request
         $response1 = $this->postJson('/api/checkout', [
-            'quote_id' => $quote->id,
+            'quote_id' => $quote->quote_id,
         ], [
             'Idempotency-Key' => $idempotencyKey,
         ]);
@@ -102,7 +91,7 @@ class CheckoutTest extends TestCase
 
         // Second request with same idempotency key
         $response2 = $this->postJson('/api/checkout', [
-            'quote_id' => $quote->id,
+            'quote_id' => $quote->quote_id,
         ], [
             'Idempotency-Key' => $idempotencyKey,
         ]);
@@ -125,15 +114,15 @@ class CheckoutTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/checkout', [
-            'quote_id' => $quote->id,
+            'quote_id' => $quote->quote_id,
         ], [
             'Idempotency-Key' => 'test-expired',
         ]);
 
         $response->assertStatus(409)
-                ->assertJson([
-                    'error' => 'REQUOTE_REQUIRED',
-                ]);
+            ->assertJson([
+                'error' => 'REQUOTE_REQUIRED',
+            ]);
     }
 
     /** @test */
@@ -144,6 +133,12 @@ class CheckoutTest extends TestCase
 
         // Create new spot price that exceeds tolerance (more than 0.5% = 50 bps)
         // $2000 + 1% = $2020 (exceeds 50 bps tolerance)
+        
+        // First mark existing current spot price as not current
+        SpotPrice::where('metal_type', 'gold')
+            ->where('is_current', true)
+            ->update(['is_current' => false]);
+
         SpotPrice::create([
             'metal_type' => 'gold',
             'price_per_oz_cents' => 202000, // $2020 (1% increase)
@@ -152,22 +147,22 @@ class CheckoutTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/checkout', [
-            'quote_id' => $quote->id,
+            'quote_id' => $quote->quote_id,
         ], [
             'Idempotency-Key' => 'test-tolerance',
         ]);
 
         $response->assertStatus(409)
-                ->assertJson([
-                    'error' => 'REQUOTE_REQUIRED',
-                ]);
+            ->assertJson([
+                'error' => 'REQUOTE_REQUIRED',
+            ]);
     }
 
     /** @test */
     public function it_validates_quote_exists()
     {
         $response = $this->postJson('/api/checkout', [
-            'quote_id' => 99999, // Non-existent quote
+            'quote_id' => '99999999-9999-9999-9999-999999999999', // Non-existent
         ], [
             'Idempotency-Key' => 'test-not-found',
         ]);
@@ -185,15 +180,31 @@ class CheckoutTest extends TestCase
         $unitPrice = $product->calculateUnitPrice($spotPrice->price_per_oz_cents);
 
         $defaults = [
-            'product_id' => $product->id,
+            'sku' => $product->sku,
             'quantity' => 1,
             'unit_price_cents' => $unitPrice,
+            'total_price_cents' => $unitPrice, // Will be recalculated after merge
             'basis_spot_cents' => $spotPrice->price_per_oz_cents,
             'basis_version' => $spotPrice->id,
             'quote_expires_at' => now()->addMinutes(5),
             'tolerance_bps' => 50,
         ];
 
-        return PriceQuote::create(array_merge($defaults, $overrides));
+        $data = array_merge($defaults, $overrides);
+        $data['total_price_cents'] = $data['unit_price_cents'] * $data['quantity'];
+
+        return PriceQuote::create($data);
+    }
+
+    /**
+     * Mock fulfillment availability for testing
+     */
+    private function mockFulfillmentAvailability(string $sku, int $availableQty): void
+    {
+        // Set mock fulfillment availability
+        $this->postJson('/api/mock-fulfillment/availability', [
+            'sku' => $sku,
+            'available_qty' => $availableQty,
+        ]);
     }
 }

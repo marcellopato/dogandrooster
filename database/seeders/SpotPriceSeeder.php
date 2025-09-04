@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\SpotPrice;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class SpotPriceSeeder extends Seeder
 {
@@ -14,7 +14,7 @@ class SpotPriceSeeder extends Seeder
     public function run(): void
     {
         $now = Carbon::now();
-        
+
         $spotPrices = [
             [
                 'metal_type' => 'gold',
@@ -39,9 +39,9 @@ class SpotPriceSeeder extends Seeder
         foreach ($spotPrices as $priceData) {
             // First, mark any existing current prices as not current
             SpotPrice::where('metal_type', $priceData['metal_type'])
-                     ->where('is_current', true)
-                     ->update(['is_current' => false]);
-            
+                ->where('is_current', true)
+                ->update(['is_current' => false]);
+
             // Then create the new current price
             SpotPrice::create($priceData);
         }

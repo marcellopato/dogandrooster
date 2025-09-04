@@ -23,11 +23,11 @@ return new class extends Migration
             $table->integer('tolerance_bps')->default(50); // Tolerance in basis points
             $table->timestamp('quote_expires_at'); // Quote expiry (now + 5 minutes)
             $table->timestamps();
-            
+
             $table->index(['quote_id']);
             $table->index(['sku', 'created_at']);
             $table->index(['quote_expires_at']);
-            
+
             $table->foreign('basis_version')->references('id')->on('spot_prices');
         });
     }

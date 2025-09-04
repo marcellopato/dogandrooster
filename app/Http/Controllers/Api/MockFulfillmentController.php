@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Mock Fulfillment Controller for testing inventory checks
@@ -12,23 +13,17 @@ use Illuminate\Http\JsonResponse;
 class MockFulfillmentController extends Controller
 {
     /**
-     * Mock inventory data
-     */
-    private static array $inventory = [
-        'GOLD_1OZ' => 100,
-        'SILVER-1OZ' => 500,
-        'PLATINUM-1OZ' => 50,
-    ];
-
-    /**
      * Get availability for a specific SKU
-     *
-     * @param string $sku
-     * @return JsonResponse
      */
     public function getAvailability(string $sku): JsonResponse
     {
-        $availableQty = self::$inventory[$sku] ?? 0;
+        $inventory = Cache::get('mock_inventory', [
+            'GOLD_1OZ' => 100,
+            'SILVER_1OZ' => 500,
+            'PLATINUM_1OZ' => 50,
+        ]);
+
+        $availableQty = $inventory[$sku] ?? 0;
 
         return response()->json([
             'sku' => $sku,
@@ -39,21 +34,25 @@ class MockFulfillmentController extends Controller
 
     /**
      * Set availability for a specific SKU (for testing)
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function setAvailability(Request $request): JsonResponse
     {
         $request->validate([
             'sku' => 'required|string',
-            'quantity' => 'required|integer|min:0',
+            'available_qty' => 'required|integer|min:0',
         ]);
 
         $sku = $request->input('sku');
-        $quantity = $request->input('quantity');
+        $quantity = $request->input('available_qty');
 
-        self::$inventory[$sku] = $quantity;
+        $inventory = Cache::get('mock_inventory', [
+            'GOLD_1OZ' => 100,
+            'SILVER_1OZ' => 500,
+            'PLATINUM_1OZ' => 50,
+        ]);
+
+        $inventory[$sku] = $quantity;
+        Cache::put('mock_inventory', $inventory);
 
         return response()->json([
             'sku' => $sku,
@@ -64,20 +63,20 @@ class MockFulfillmentController extends Controller
 
     /**
      * Reset inventory to default values (for testing)
-     *
-     * @return JsonResponse
      */
     public function resetInventory(): JsonResponse
     {
-        self::$inventory = [
+        $defaultInventory = [
             'GOLD_1OZ' => 100,
-            'SILVER-1OZ' => 500,
-            'PLATINUM-1OZ' => 50,
+            'SILVER_1OZ' => 500,
+            'PLATINUM_1OZ' => 50,
         ];
+
+        Cache::put('mock_inventory', $defaultInventory);
 
         return response()->json([
             'message' => 'Inventory reset to default values',
-            'inventory' => self::$inventory,
+            'inventory' => $defaultInventory,
         ]);
     }
 }

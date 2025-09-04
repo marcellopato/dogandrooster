@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Api;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\Product;
 use App\Models\SpotPrice;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class QuoteTest extends TestCase
 {
@@ -14,7 +14,7 @@ class QuoteTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create a test product
         Product::create([
             'sku' => 'GOLD_1OZ',
@@ -43,11 +43,11 @@ class QuoteTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-                ->assertJsonStructure([
-                    'quote_id',
-                    'unit_price_cents',
-                    'quote_expires_at',
-                ]);
+            ->assertJsonStructure([
+                'quote_id',
+                'unit_price_cents',
+                'quote_expires_at',
+            ]);
 
         // Check that unit price is spot + premium (2000.00 + 50.00 = $2050.00)
         $response->assertJson([
@@ -61,7 +61,7 @@ class QuoteTest extends TestCase
         $response = $this->postJson('/api/quote', []);
 
         $response->assertStatus(422)
-                ->assertJsonValidationErrors(['sku', 'qty']);
+            ->assertJsonValidationErrors(['sku', 'qty']);
     }
 
     /** @test */
@@ -73,9 +73,9 @@ class QuoteTest extends TestCase
         ]);
 
         $response->assertStatus(404)
-                ->assertJson([
-                    'error' => 'PRODUCT_NOT_FOUND',
-                ]);
+            ->assertJson([
+                'error' => 'PRODUCT_NOT_FOUND',
+            ]);
     }
 
     /** @test */
@@ -87,7 +87,7 @@ class QuoteTest extends TestCase
         ]);
 
         $response->assertStatus(422)
-                ->assertJsonValidationErrors(['qty']);
+            ->assertJsonValidationErrors(['qty']);
 
         $response = $this->postJson('/api/quote', [
             'sku' => 'GOLD_1OZ',
@@ -95,6 +95,6 @@ class QuoteTest extends TestCase
         ]);
 
         $response->assertStatus(422)
-                ->assertJsonValidationErrors(['qty']);
+            ->assertJsonValidationErrors(['qty']);
     }
 }

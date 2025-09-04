@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\MockFulfillmentController;
+use App\Http\Controllers\Api\QuoteController;
+use App\Http\Controllers\Api\WebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\QuoteController;
-use App\Http\Controllers\Api\CheckoutController;
-use App\Http\Controllers\Api\WebhookController;
-use App\Http\Controllers\Api\MockFulfillmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,7 +25,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Quote API
 Route::post('/quote', [QuoteController::class, 'store']);
 
-// Checkout API  
+// Checkout API
 Route::post('/checkout', [CheckoutController::class, 'store']);
 
 // Payment Webhooks

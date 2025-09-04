@@ -11,8 +11,6 @@ class CheckoutRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -27,7 +25,7 @@ class CheckoutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'quote_id' => 'required|integer|exists:price_quotes,id',
+            'quote_id' => 'required|string|exists:price_quotes,quote_id',
         ];
     }
 
@@ -40,15 +38,13 @@ class CheckoutRequest extends FormRequest
     {
         return [
             'quote_id.required' => 'Quote ID is required',
-            'quote_id.integer' => 'Quote ID must be an integer',
+            'quote_id.string' => 'Quote ID must be a string',
             'quote_id.exists' => 'Quote not found',
         ];
     }
 
     /**
      * Get the Idempotency-Key header value
-     *
-     * @return string|null
      */
     public function getIdempotencyKey(): ?string
     {
