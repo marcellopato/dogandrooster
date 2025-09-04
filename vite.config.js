@@ -8,7 +8,7 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
         }),
-        vue({
+    vue({
             template: {
                 compilerOptions: {
                     // treat any tag that starts with ion- as custom elements
@@ -16,6 +16,7 @@ export default defineConfig({
                 }
             }
         }),
+
     ],
     resolve: {
         alias: {
