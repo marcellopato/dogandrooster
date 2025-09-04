@@ -1,104 +1,104 @@
 # Ecom Volatile Pricing - Precious Metals Checkout
 
-Um sistema de checkout de e-commerce para metais preciosos com precificação volátil e cotações com prazo de validade limitado.
+An e-commerce checkout system for precious metals with volatile pricing and time-limited quotes.
 
-## 🎯 Visão Geral do Projeto
+## 🎯 Project Overview
 
-Este projeto implementa uma fatia de checkout para e-commerce de metais preciosos que lida com:
+This project implements a checkout slice for precious metals e-commerce that handles:
 
-- **Cotações travadas** válidas por 5 minutos
-- **Preços voláteis** indexados ao mercado spot
-- **Verificação de estoque** em tempo real via API mock
-- **Checkout idempotente** e transacional
-- **Webhooks de pagamento** com verificação HMAC
-- **Interface responsiva** com countdown e tratamento de erros
+- **Locked quotes** valid for 5 minutes
+- **Volatile prices** indexed to spot market
+- **Real-time inventory check** via mock API
+- **Idempotent and transactional** checkout
+- **Payment webhooks** with HMAC verification
+- **Responsive interface** with countdown and error handling
 
-## 🛠️ Stack Tecnológica
+## 🛠️ Technology Stack
 
 ### Backend
-- **Laravel 10** - Framework PHP
-- **MySQL 8.0** - Banco de dados principal
-- **Redis** - Cache e sessions
-- **Laravel Sanctum** - Autenticação API
-- **L5-Swagger** - Documentação da API
+- **Laravel 10** - PHP Framework
+- **MySQL 8.0** - Primary database
+- **Redis** - Cache and sessions
+- **Laravel Sanctum** - API authentication
+- **L5-Swagger** - API documentation
 
 ### Frontend  
-- **Vue.js 3** - Framework JavaScript
-- **TailwindCSS** - Framework CSS
+- **Vue.js 3** - JavaScript framework
+- **TailwindCSS** - CSS framework
 - **Vite** - Build tool
 
 ### DevOps
-- **Docker + Laravel Sail** - Containerização
-- **Mailpit** - Testing de emails
+- **Docker + Laravel Sail** - Containerization
+- **Mailpit** - Email testing
 
-## 📋 Instalação e Setup
+## 📋 Installation and Setup
 
-### Pré-requisitos
+### Prerequisites
 - Docker Desktop
 - Node.js 18+
 - Git
 
-### 1. Clone o repositório
+### 1. Clone the repository
 ```bash
 git clone <repo-url>
 cd dogandrooster
 ```
 
-### 2. Configuração do ambiente
+### 2. Environment configuration
 ```bash
-# Copiar arquivo de ambiente
+# Copy environment file
 cp .env.example .env
 
-# Gerar chave da aplicação
+# Generate application key
 php artisan key:generate
 ```
 
-### 3. Configurar Docker/Sail
+### 3. Configure Docker/Sail
 ```bash
-# Instalar dependências do Composer
+# Install Composer dependencies
 composer install
 
-# Levantar containers
+# Start containers
 docker-compose up -d
 
-# Executar migrações
+# Run migrations
 docker-compose exec laravel.test php artisan migrate
 
-# Executar seeders (quando disponíveis)
+# Run seeders (when available)
 docker-compose exec laravel.test php artisan db:seed
 ```
 
-### 4. Configurar Frontend
+### 4. Configure Frontend
 ```bash
-# Instalar dependências
+# Install dependencies
 npm install
 
-# Executar em modo desenvolvimento
+# Run in development mode
 npm run dev
 ```
 
-## 🚀 Executando o Projeto
+## 🚀 Running the Project
 
-### Desenvolvimento
+### Development
 ```bash
-# Backend (containers Docker)
+# Backend (Docker containers)
 docker-compose up -d
 
 # Frontend (Vite dev server)
 npm run dev
 ```
 
-### URLs Importantes
-- **Aplicação**: http://localhost
-- **Demo Vue**: http://localhost/demo
+### Important URLs
+- **Application**: http://localhost
+- **Vue Demo**: http://localhost/demo
 - **API Docs (Swagger)**: http://localhost/api/documentation
 - **Mailpit**: http://localhost:8025
 - **MySQL**: localhost:3306
 - **Redis**: localhost:6379
 
-## 📡 Endpoints da API
+## 📡 API Endpoints
 
-### 1. Cotação
+### 1. Quote
 ```http
 POST /api/quote
 Content-Type: application/json
@@ -109,7 +109,7 @@ Content-Type: application/json
 }
 ```
 
-**Resposta:**
+**Response:**
 ```json
 {
   "quote_id": "uuid",
@@ -129,7 +129,7 @@ Idempotency-Key: unique-key
 }
 ```
 
-### 3. Webhooks de Pagamento
+### 3. Payment Webhooks
 ```http
 POST /api/webhooks/payments
 X-Signature: hmac-sha256-signature
@@ -146,32 +146,32 @@ GET /api/mock-fulfillment/availability/{sku}
 POST /api/mock-fulfillment/availability
 ```
 
-## 🧪 Executando Testes
+## 🧪 Running Tests
 
 ```bash
-# Todos os testes
+# All tests
 docker-compose exec laravel.test php artisan test
 
-# Testes específicos
+# Specific tests
 docker-compose exec laravel.test php artisan test --filter=QuoteTest
 
-# Com coverage
+# With coverage
 docker-compose exec laravel.test php artisan test --coverage
 ```
 
-### Testes Implementados
-- ✅ `Pricing/IntegerMoneyTest` - Matemática inteira para preços
-- ✅ `Checkout/QuoteExpiryTest` - Expiração de cotações
-- ✅ `Checkout/ToleranceBreachTest` - Violação de tolerância
-- ✅ `Checkout/IdempotencyTest` - Idempotência do checkout
-- ✅ `Checkout/InventoryCheckTest` - Verificação de estoque
-- ✅ `Webhooks/SignatureTest` - Validação de assinaturas
-- 🆕 `Webhooks/InvalidSignatureTest` - Assinaturas inválidas
-- 🆕 `Checkout/TotalsIntegrityTest` - Integridade dos totais
+### Implemented Tests
+- ✅ `Pricing/IntegerMoneyTest` - Integer math for prices
+- ✅ `Checkout/QuoteExpiryTest` - Quote expiration
+- ✅ `Checkout/ToleranceBreachTest` - Tolerance breach
+- ✅ `Checkout/IdempotencyTest` - Checkout idempotency
+- ✅ `Checkout/InventoryCheckTest` - Inventory verification
+- ✅ `Webhooks/SignatureTest` - Signature validation
+- 🆕 `Webhooks/InvalidSignatureTest` - Invalid signatures
+- 🆕 `Checkout/TotalsIntegrityTest` - Totals integrity
 
-## ⚙️ Configurações Importantes
+## ⚙️ Important Configurations
 
-### Variáveis de Ambiente (.env)
+### Environment Variables (.env)
 ```env
 # Database
 DB_CONNECTION=mysql
@@ -187,47 +187,47 @@ SPOT_PRICE_TOLERANCE_BPS=50
 QUOTE_EXPIRY_MINUTES=5
 ```
 
-## 🏗️ Arquitetura e Decisões Técnicas
+## 🏗️ Architecture and Technical Decisions
 
-### Concorrência e Idempotência
-- **Row Locking**: Uso de `SELECT ... FOR UPDATE` durante checkout
-- **Transações DB**: Todas as operações críticas são envolvidas em transações
-- **Idempotency Keys**: Headers únicos previnem duplicação de pedidos
-- **Optimistic Locking**: Verificação de versão de preços spot
+### Concurrency and Idempotency
+- **Row Locking**: Use of `SELECT ... FOR UPDATE` during checkout
+- **DB Transactions**: All critical operations are wrapped in transactions
+- **Idempotency Keys**: Unique headers prevent order duplication
+- **Optimistic Locking**: Spot price version verification
 
-### Precisão Financeira
-- **Apenas inteiros**: Todos os cálculos em centavos (sem decimais)
-- **Matemática segura**: Multiplicações e divisões controladas
-- **Basis Points**: Tolerância de preço em pontos base (1 bp = 0.01%)
+### Financial Precision
+- **Integers only**: All calculations in cents (no decimals)
+- **Safe math**: Controlled multiplications and divisions
+- **Basis Points**: Price tolerance in basis points (1 bp = 0.01%)
 
-### Tratamento de Erros
-- **4xx para business logic**: Erros esperados retornam códigos apropriados
-- **Error codes específicos**: `REQUOTE_REQUIRED`, `OUT_OF_STOCK`, etc.
-- **Friendly messages**: Interface converte códigos em mensagens amigáveis
-- **Fail-fast**: Validações rápidas antes de operações caras
+### Error Handling
+- **4xx for business logic**: Expected errors return appropriate codes
+- **Specific error codes**: `REQUOTE_REQUIRED`, `OUT_OF_STOCK`, etc.
+- **Friendly messages**: Interface converts codes to user-friendly messages
+- **Fail-fast**: Quick validations before expensive operations
 
-### Observabilidade
-- **Structured Logging**: Logs estruturados para fulfillment e webhooks
-- **Health Checks**: Containers com health checks configurados
-- **Error Tracking**: Logs de erro detalhados para debugging
+### Observability
+- **Structured Logging**: Structured logs for fulfillment and webhooks
+- **Health Checks**: Containers with configured health checks
+- **Error Tracking**: Detailed error logs for debugging
 
-## 🎨 Interface do Usuário
+## 🎨 User Interface
 
-### Recursos Implementados
-- **Countdown Timer**: Mostra tempo restante da cotação (mm:ss)
-- **Estados de Loading**: Botões desabilitados durante requisições
-- **Mensagens Amigáveis**: Tradução de códigos de erro para linguagem natural
-- **Acessibilidade**: `role="alert"`, focusable, screen reader friendly
-- **Responsivo**: Design adaptável para mobile e desktop
+### Implemented Features
+- **Countdown Timer**: Shows remaining quote time (mm:ss)
+- **Loading States**: Disabled buttons during requests
+- **Friendly Messages**: Translation of error codes to natural language
+- **Accessibility**: `role="alert"`, focusable, screen reader friendly
+- **Responsive**: Adaptive design for mobile and desktop
 
-### Fluxo do Usuário
-1. **Seleção**: Escolher SKU e quantidade
-2. **Cotação**: Obter preço com prazo de 5 minutos
-3. **Countdown**: Visualizar tempo restante
-4. **Checkout**: Processar pedido ou renovar cotação
-5. **Feedback**: Receber confirmação ou instrução de erro
+### User Flow
+1. **Selection**: Choose SKU and quantity
+2. **Quote**: Get price with 5-minute deadline
+3. **Countdown**: View remaining time
+4. **Checkout**: Process order or renew quote
+5. **Feedback**: Receive confirmation or error instruction
 
-## 🔒 Segurança
+## 🔒 Security
 
 ### HMAC Verification
 ```php
@@ -238,51 +238,51 @@ if (!hash_equals($signature, $providedSignature)) {
 ```
 
 ### CSRF Protection
-- **API**: Token CSRF em headers
-- **Forms**: `@csrf` directive em formulários Blade
+- **API**: CSRF token in headers
+- **Forms**: `@csrf` directive in Blade forms
 
 ### Rate Limiting
-- **API endpoints**: Throttling configurado por IP/usuário
-- **Webhook endpoints**: Rate limiting específico
+- **API endpoints**: Throttling configured per IP/user
+- **Webhook endpoints**: Specific rate limiting
 
-## 📊 Monitoramento e Logs
+## 📊 Monitoring and Logs
 
-### Logs Importantes
+### Important Logs
 - **Fulfillment Calls**: `LOG::info('Checking inventory', ['sku' => $sku])`
 - **Webhook Results**: `LOG::info('Webhook processed', ['event' => $event])`
-- **Quote Creation**: Criação e expiração de cotações
-- **Checkout Process**: Sucesso/falha de checkout
+- **Quote Creation**: Quote creation and expiration
+- **Checkout Process**: Checkout success/failure
 
-### Métricas Sugeridas
-- Taxa de conversão de cotação → checkout
-- Tempo médio de resposta da API
-- Frequência de requotes por tolerância
-- Disponibilidade do serviço de fulfillment
+### Suggested Metrics
+- Quote to checkout conversion rate
+- Average API response time
+- Requote frequency due to tolerance
+- Fulfillment service availability
 
-## 🚧 Melhorias Futuras
+## 🚧 Future Improvements
 
-### Com Mais Tempo
-1. **Cache Inteligente**: Redis para preços spot com TTL
-2. **Queue System**: Background jobs para webhooks
-3. **Event Sourcing**: Histórico completo de mudanças de preço
-4. **Circuit Breaker**: Proteção contra falhas do fulfillment
-5. **Multi-currency**: Suporte a múltiplas moedas
-6. **Advanced UI**: Gráficos de preço, histórico de cotações
-7. **Mobile App**: PWA ou app nativo
-8. **Analytics**: Dashboard de métricas em tempo real
+### With More Time
+1. **Smart Cache**: Redis for spot prices with TTL
+2. **Queue System**: Background jobs for webhooks
+3. **Event Sourcing**: Complete price change history
+4. **Circuit Breaker**: Protection against fulfillment failures
+5. **Multi-currency**: Support for multiple currencies
+6. **Advanced UI**: Price charts, quote history
+7. **Mobile App**: PWA or native app
+8. **Analytics**: Real-time metrics dashboard
 
-### Escalabilidade
-- **Horizontal Scaling**: Load balancer + múltiplas instâncias
-- **Database Sharding**: Particionamento por região/produto
-- **CDN**: Cache de assets estáticos
-- **Microservices**: Separação de pricing, inventory, payments
+### Scalability
+- **Horizontal Scaling**: Load balancer + multiple instances
+- **Database Sharding**: Partitioning by region/product
+- **CDN**: Static assets caching
+- **Microservices**: Separation of pricing, inventory, payments
 
-## 🤝 Contribuindo
+## 🤝 Contributing
 
-1. Criar nova branch: `git checkout -b feature/nova-funcionalidade`
-2. Fazer commit: `git commit -m 'feat: nova funcionalidade'`
-3. Push: `git push origin feature/nova-funcionalidade`
-4. Abrir Pull Request
+1. Create new branch: `git checkout -b feature/new-feature`
+2. Make commit: `git commit -m 'feat: new feature'`
+3. Push: `git push origin feature/new-feature`
+4. Open Pull Request
 
 ### Code Style
 ```bash
@@ -293,17 +293,17 @@ docker-compose exec laravel.test ./vendor/bin/pint
 docker-compose exec laravel.test ./vendor/bin/phpstan analyse
 ```
 
-## 📄 Licença
+## 📄 License
 
-Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhes.
+This project is under the MIT license. See [LICENSE](LICENSE) for more details.
 
-## 🛟 Suporte
+## 🛟 Support
 
-Para dúvidas ou problemas:
-1. Verificar [Issues existentes](https://github.com/owner/repo/issues)
-2. Criar nova issue com template apropriado
-3. Consultar documentação da API em `/api/documentation`
+For questions or issues:
+1. Check [existing Issues](https://github.com/owner/repo/issues)
+2. Create new issue with appropriate template
+3. Consult API documentation at `/api/documentation`
 
 ---
 
-**Desenvolvido com ❤️ usando Laravel + Vue.js + TailwindCSS**
+**Developed with ❤️ using Laravel + Vue.js + TailwindCSS**
