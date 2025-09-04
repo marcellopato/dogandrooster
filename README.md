@@ -259,9 +259,6 @@ if (!hash_equals($signature, $providedSignature)) {
 - Requote frequency due to tolerance
 - Fulfillment service availability
 
-<<<<<<< HEAD
-## 🚧 Future Improvements
-=======
 ## 🧪 Testes Implementados
 
 ### Testes Unitários
@@ -408,12 +405,8 @@ For questions or issues:
 
 ---
 
-<<<<<<< HEAD
 **Developed with ❤️ using Laravel + Vue.js + TailwindCSS**
-=======
-**Desenvolvido com ❤️ usando Laravel + Vue.js + TailwindCSS**
 
-## 🧪 Resultado dos Testes Unitários
 
 ### PHP Code Style (Laravel Pint)
 
