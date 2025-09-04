@@ -40,7 +40,7 @@ This project implements a checkout slice for precious metals e-commerce that han
 
 ### 1. Clone the repository
 ```bash
-git clone <repo-url>
+git clone <[repo-url](https://github.com/marcellopato/dogandrooster)>
 cd dogandrooster
 ```
 
@@ -259,109 +259,101 @@ if (!hash_equals($signature, $providedSignature)) {
 - Requote frequency due to tolerance
 - Fulfillment service availability
 
-<<<<<<< HEAD
-## 🚧 Future Improvements
-=======
-## 🧪 Testes Implementados
+## 🧪 Implemented Tests
 
-### Testes Unitários
+### Unit Tests
 
 #### **IntegerMoneyTest** (`tests/Unit/Pricing/`)
-Garante que todos os cálculos de preço usam apenas matemática de inteiros (centavos):
-- ✅ Verifica que `unit_price_cents` é sempre inteiro
-- ✅ Testa cálculos com pesos fracionários (0.5 oz)
-- ✅ Valida múltiplas quantidades
-- ✅ Previne problemas de ponto flutuante
+Ensures all price calculations use only integer math (cents):
+- ✅ Verifies that `unit_price_cents` is always an integer  
+- ✅ Tests calculations with fractional weights (0.5 oz)  
+- ✅ Validates multiple quantities  
+- ✅ Prevents floating-point issues  
 
-### Testes de Feature
+### Feature Tests
 
 #### **QuoteExpiryTest** (`tests/Feature/Checkout/`)
-Testa expiração de cotações com erro `REQUOTE_REQUIRED`:
-- ✅ Rejeita cotações expiradas (409)
-- ✅ Aceita cotações válidas
-- ✅ Trata tempo exato de expiração como expirado
-- ✅ Manipula tempo UTC corretamente
+Tests quote expiration with `REQUOTE_REQUIRED` error:
+- ✅ Rejects expired quotes (409)  
+- ✅ Accepts valid quotes  
+- ✅ Treats exact expiration time as expired  
+- ✅ Handles UTC time correctly  
 
 #### **ToleranceBreachTest** (`tests/Feature/Checkout/`)
-Valida tolerância de movimento do preço spot:
-- ✅ Rejeita quando spot move além da tolerância (409)
-- ✅ Aceita movimento dentro da tolerância
-- ✅ Testa aumentos e diminuições de preço
-- ✅ Calcula basis points corretamente
+Validates spot price movement tolerance:
+- ✅ Rejects when spot moves beyond tolerance (409)  
+- ✅ Accepts movement within tolerance  
+- ✅ Tests both price increases and decreases  
+- ✅ Calculates basis points correctly  
 
 #### **IdempotencyTest** (`tests/Feature/Checkout/`)
-Garante idempotência com `Idempotency-Key`:
-- ✅ Retorna mesmo `order_id` para chave duplicada
-- ✅ Cria ordens diferentes para chaves diferentes
-- ✅ Manipula requisições concorrentes
-- ✅ Funciona através de diferentes `quote_id`
+Ensures idempotency with `Idempotency-Key`:
+- ✅ Returns same `order_id` for duplicate key  
+- ✅ Creates different orders for different keys  
+- ✅ Handles concurrent requests  
+- ✅ Works across different `quote_id`s  
 
 #### **InventoryCheckTest** (`tests/Feature/Checkout/`)
-Valida verificação de estoque com erro `OUT_OF_STOCK`:
-- ✅ Rejeita quando estoque insuficiente (409)
-- ✅ Rejeita quando quantidade > estoque
-- ✅ Aceita quando quantidade ≤ estoque
-- ✅ Trata erros da API como falta de estoque
-- ✅ Não cria ordens quando falha verificação
+Validates stock check with `OUT_OF_STOCK` error:
+- ✅ Rejects when stock is insufficient (409)  
+- ✅ Rejects when quantity > stock  
+- ✅ Accepts when quantity ≤ stock  
+- ✅ Treats API errors as out of stock  
+- ✅ Does not create orders when stock check fails  
 
 #### **SignatureTest** (`tests/Feature/Webhooks/`)
-Testa webhooks com HMAC válido:
-- ✅ Processa `payment_authorized` → status `authorized`
-- ✅ Processa `payment_captured` apenas de `authorized` → `captured`
-- ✅ Rejeita transições ilegais de status
-- ✅ Aceita eventos não suportados sem erro
-- ✅ Rejeita assinatura inválida ou intent desconhecido
+Tests webhooks with valid HMAC:
+- ✅ Processes `payment_authorized` → status `authorized`  
+- ✅ Processes `payment_captured` only from `authorized` → `captured`  
+- ✅ Rejects illegal status transitions  
+- ✅ Accepts unsupported events without error  
+- ✅ Rejects invalid signature or unknown intent  
 
 #### **InvalidSignatureTest** (`tests/Feature/Webhooks/`)
-Garante retorno de 400 e nenhuma mudança de estado:
-- ✅ Assinatura completamente inválida
-- ✅ Payload adulterado após assinatura
-- ✅ Assinatura malformada (não hex)
-- ✅ Intent desconhecido com assinatura válida
-- ✅ Múltiplas tentativas inválidas preservam estado
+Ensures 400 response and no state changes:
+- ✅ Completely invalid signature  
+- ✅ Payload tampered after signing  
+- ✅ Malformed signature (non-hex)  
+- ✅ Unknown intent with valid signature  
+- ✅ Multiple invalid attempts preserve state  
 
 #### **TotalsIntegrityTest** (`tests/Feature/Checkout/`)
-Verifica integridade de totais e cálculos:
-- ✅ `orders.total_cents == sum(order_lines.subtotal_cents)`
-- ✅ `order_lines.subtotal_cents == unit_price_cents * quantity`
-- ✅ Funciona com itens únicos e múltiplos
-- ✅ Testa diferentes tipos de produto
-- ✅ Valida grandes quantidades sem erro de arredondamento
+Checks totals and calculation integrity:
+- ✅ `orders.total_cents == sum(order_lines.subtotal_cents)`  
+- ✅ `order_lines.subtotal_cents == unit_price_cents * quantity`  
+- ✅ Works with single and multiple items  
+- ✅ Tests different product types  
+- ✅ Validates large quantities without rounding errors  
 
-### Execução dos Testes
+### Test Execution
 
 ```bash
-# Todos os testes
+# All tests
 docker exec dogandrooster-laravel.test-1 php artisan test
 
-# Apenas testes unitários
+# Unit tests only
 docker exec dogandrooster-laravel.test-1 php artisan test --testsuite=Unit
 
-# Apenas testes de feature
+# Feature tests only
 docker exec dogandrooster-laravel.test-1 php artisan test --testsuite=Feature
 
-# Teste específico
+# Specific test
 docker exec dogandrooster-laravel.test-1 php artisan test tests/Unit/Pricing/IntegerMoneyTest.php
 
-# Com cobertura (se configurado)
+# With coverage (if configured)
 docker exec dogandrooster-laravel.test-1 php artisan test --coverage
-```
 
-### Verificação de Qualidade
+### Quality Check
 
-```bash
 # Laravel Pint (Style)
 docker exec dogandrooster-laravel.test-1 php ./vendor/bin/pint
 
 # Larastan (Static Analysis)
 docker exec dogandrooster-laravel.test-1 php ./vendor/bin/phpstan analyse --level=6
 
-# Executar todos juntos
+# Run all together
 docker exec dogandrooster-laravel.test-1 bash -c "php ./vendor/bin/pint && php ./vendor/bin/phpstan analyse --level=6 && php artisan test"
-```
 
-## 🚧 Melhorias Futuras
->>>>>>> b06e88db6647004df3cceddebe513974b9cbea2f
 
 ### With More Time
 1. **Smart Cache**: Redis for spot prices with TTL
@@ -408,12 +400,8 @@ For questions or issues:
 
 ---
 
-<<<<<<< HEAD
 **Developed with ❤️ using Laravel + Vue.js + TailwindCSS**
-=======
-**Desenvolvido com ❤️ usando Laravel + Vue.js + TailwindCSS**
 
-## 🧪 Resultado dos Testes Unitários
 
 ### PHP Code Style (Laravel Pint)
 
@@ -449,24 +437,25 @@ For questions or issues:
   ✓ tests/Feature/Webhooks/SignatureTest.php                                                                                                                                                       no_whitespace_in_blank_line  
 ```
 
-### Resumo dos Testes
+### Test Summary
 
-- **85 arquivos** verificados pelo Pint
-- **23 problemas de estilo** corrigidos automaticamente
-- **Cobertura completa** de controllers, models, factories, migrations e seeders
-- **Padrão Laravel** aplicado consistentemente em todo o projeto
+- **85 files** checked by Pint  
+- **23 style issues** automatically fixed  
+- **Full coverage** of controllers, models, factories, migrations, and seeders  
+- **Laravel standard** consistently applied across the entire project  
 
-### Principais Correções Aplicadas
+### Main Fixes Applied
 
-- **PHPDoc**: Limpeza e padronização de comentários
-- **Espaçamento**: Correção de indentação e espaços em branco
-- **Imports**: Organização e remoção de imports não utilizados
-- **Formatação**: Padronização de quebras de linha e chaves
-- **Operadores**: Espaçamento consistente de operadores
+- **PHPDoc**: Cleanup and standardization of comments  
+- **Spacing**: Fixed indentation and whitespace  
+- **Imports**: Organized and removed unused imports  
+- **Formatting**: Standardized line breaks and braces  
+- **Operators**: Consistent operator spacing  
 
-## 🧪 Resultados dos Testes PHPUnit
+## 🧪 PHPUnit Test Results
 
-### Execução Completa dos Testes
+### Full Test Execution
+
 
 ```bash
 # php artisan test
@@ -552,38 +541,39 @@ For questions or issues:
   Duration: 25.27s
 ```
 
-### 📊 Análise dos Resultados
+### 📊 Results Analysis
 
-- **✅ 53 testes passaram** com 100% de sucesso
-- **📈 158 assertions** executadas e validadas
-- **⏱️ 25.27s** de duração total
-- **🎯 0 falhas** - Todos os requisitos implementados
+- **✅ 53 tests passed** with 100% success  
+- **📈 158 assertions** executed and validated  
+- **⏱️ 25.27s** total duration  
+- **🎯 0 failures** - All requirements implemented  
 
-### 🏆 Cobertura de Testes por Categoria
+### 🏆 Test Coverage by Category
 
-| Categoria | Testes | Status | Funcionalidade Testada |
-|-----------|---------|--------|------------------------|
-| **Unit/ExampleTest** | 1 | ✅ PASS | Testes básicos de sanidade |
-| **Unit/Pricing/IntegerMoneyTest** | 4 | ✅ PASS | Matemática de preços com integers |
-| **Feature/Api/CheckoutTest** | 6 | ✅ PASS | Fluxo principal de checkout da API |
-| **Feature/Api/QuoteTest** | 4 | ✅ PASS | Geração e validação de cotações |
-| **Feature/Checkout/IdempotencyTest** | 4 | ✅ PASS | Chaves de idempotência e concorrência |
-| **Feature/Checkout/InventoryCheckTest** | 6 | ✅ PASS | Validação de estoque via API mock |
-| **Feature/Checkout/QuoteExpiryTest** | 4 | ✅ PASS | Expiração de cotações e UTC |
-| **Feature/Checkout/ToleranceBreachTest** | 4 | ✅ PASS | Validação de tolerância de preços |
-| **Feature/Checkout/TotalsIntegrityTest** | 6 | ✅ PASS | Integridade dos cálculos de totais |
-| **Feature/ExampleTest** | 1 | ✅ PASS | Testes de integração básicos |
-| **Feature/Webhooks/InvalidSignatureTest** | 6 | ✅ PASS | Segurança de webhooks (casos negativos) |
-| **Feature/Webhooks/SignatureTest** | 7 | ✅ PASS | Segurança de webhooks (casos positivos) |
+| Category | Tests | Status | Functionality Tested |
+|----------|-------|--------|-----------------------|
+| **Unit/ExampleTest** | 1 | ✅ PASS | Basic sanity tests |
+| **Unit/Pricing/IntegerMoneyTest** | 4 | ✅ PASS | Integer-based price math |
+| **Feature/Api/CheckoutTest** | 6 | ✅ PASS | Main API checkout flow |
+| **Feature/Api/QuoteTest** | 4 | ✅ PASS | Quote generation and validation |
+| **Feature/Checkout/IdempotencyTest** | 4 | ✅ PASS | Idempotency keys and concurrency |
+| **Feature/Checkout/InventoryCheckTest** | 6 | ✅ PASS | Stock validation via mock API |
+| **Feature/Checkout/QuoteExpiryTest** | 4 | ✅ PASS | Quote expiration and UTC |
+| **Feature/Checkout/ToleranceBreachTest** | 4 | ✅ PASS | Price tolerance validation |
+| **Feature/Checkout/TotalsIntegrityTest** | 6 | ✅ PASS | Totals calculation integrity |
+| **Feature/ExampleTest** | 1 | ✅ PASS | Basic integration tests |
+| **Feature/Webhooks/InvalidSignatureTest** | 6 | ✅ PASS | Webhook security (negative cases) |
+| **Feature/Webhooks/SignatureTest** | 7 | ✅ PASS | Webhook security (positive cases) |
 
-### 🔍 Requisitos Funcionais Validados
+### 🔍 Validated Functional Requirements
 
-✅ **Quote Generation** - Cotações com cálculo correto de preços usando matemática de inteiros  
-✅ **Quote Expiry** - Validação de expiração em 5 minutos com UTC  
-✅ **Price Tolerance** - Verificação de basis points para volatilidade do mercado  
-✅ **Inventory Check** - Integração com API mock de fulfillment  
-✅ **Idempotent Checkout** - Transações seguras com chaves de idempotência  
-✅ **Payment Webhooks** - Verificação HMAC e transições de status válidas  
-✅ **Error Handling** - Códigos HTTP corretos e mensagens de erro apropriadas  
-✅ **Data Integrity** - Consistência de totais e cálculos matemáticos
->>>>>>> b06e88db6647004df3cceddebe513974b9cbea2f
+✅ **Quote Generation** - Quotes with correct price calculation using integer math  
+✅ **Quote Expiry** - Expiration validation within 5 minutes using UTC  
+✅ **Price Tolerance** - Basis points check for market volatility  
+✅ **Inventory Check** - Integration with mock fulfillment API  
+✅ **Idempotent Checkout** - Safe transactions with idempotency keys  
+✅ **Payment Webhooks** - HMAC verification and valid status transitions  
+✅ **Error Handling** - Correct HTTP codes and appropriate error messages  
+✅ **Data Integrity** - Consistency of totals and mathematical calculations  
+
+
