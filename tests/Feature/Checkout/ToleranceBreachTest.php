@@ -16,20 +16,18 @@ class ToleranceBreachTest extends TestCase
     {
         parent::setUp();
 
-        // Create test data
-        Product::create([
-            'sku' => 'GOLD_1OZ',
-            'name' => 'Gold 1 Ounce Coin',
-            'metal_type' => 'gold',
-            'weight_oz' => '1.0000',
-            'premium_cents' => 5000,
-            'active' => true,
-        ]);
+        // Seed the database with test data
+        $this->seed();
+        
+        // Product is already created by the seeder, no need to create again
     }
 
     /** @test */
     public function it_rejects_quotes_when_spot_moves_beyond_tolerance()
     {
+        // Mock fulfillment API to return available stock (should fail before inventory check)
+        $this->mockFulfillmentAvailability('GOLD_1OZ', 10);
+
         // Create initial spot price of $2000
         $initialSpotPrice = SpotPrice::create([
             'metal_type' => 'gold',
@@ -54,6 +52,12 @@ class ToleranceBreachTest extends TestCase
         // Update spot price to move beyond tolerance (more than 0.5% increase)
         // 50 bps = 0.5% of 200000 = 1000 cents
         // So 201001 cents should breach the tolerance
+        
+        // First mark existing current spot price as not current
+        SpotPrice::where('metal_type', 'gold')
+            ->where('is_current', true)
+            ->update(['is_current' => false]);
+
         SpotPrice::create([
             'metal_type' => 'gold',
             'price_per_oz_cents' => 201001, // Moved up by 1001 cents (> 50 bps)
@@ -103,6 +107,12 @@ class ToleranceBreachTest extends TestCase
         // Update spot price to move within tolerance (less than 0.5%)
         // 50 bps = 0.5% of 200000 = 1000 cents
         // So 200999 cents should be within tolerance
+        
+        // First mark existing current spot price as not current
+        SpotPrice::where('metal_type', 'gold')
+            ->where('is_current', true)
+            ->update(['is_current' => false]);
+
         SpotPrice::create([
             'metal_type' => 'gold',
             'price_per_oz_cents' => 200999, // Moved up by 999 cents (< 50 bps)
@@ -116,7 +126,7 @@ class ToleranceBreachTest extends TestCase
             'Idempotency-Key' => 'test-'.uniqid(),
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
     }
 
     /** @test */
@@ -146,6 +156,12 @@ class ToleranceBreachTest extends TestCase
         // Update spot price to decrease beyond tolerance
         // 50 bps = 0.5% of 200000 = 1000 cents
         // So 198999 cents should breach the tolerance (decrease of 1001 cents)
+        
+        // First mark existing current spot price as not current
+        SpotPrice::where('metal_type', 'gold')
+            ->where('is_current', true)
+            ->update(['is_current' => false]);
+
         SpotPrice::create([
             'metal_type' => 'gold',
             'price_per_oz_cents' => 198999,
@@ -192,6 +208,12 @@ class ToleranceBreachTest extends TestCase
         // Update spot price to move exactly at tolerance boundary
         // 100 bps = 1% of 200000 = 2000 cents
         // So 202000 cents should be exactly at tolerance
+        
+        // First mark existing current spot price as not current
+        SpotPrice::where('metal_type', 'gold')
+            ->where('is_current', true)
+            ->update(['is_current' => false]);
+
         SpotPrice::create([
             'metal_type' => 'gold',
             'price_per_oz_cents' => 202000,

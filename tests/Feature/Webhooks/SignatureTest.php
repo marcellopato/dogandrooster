@@ -189,7 +189,7 @@ class SignatureTest extends TestCase
         $order = $this->createTestOrder();
 
         $payload = [
-            'event' => 'payment_failed',
+            'event' => 'payment_unknown_event',
             'payment_intent_id' => $order->payment_intent_id,
             'timestamp' => now()->toISOString(),
         ];
@@ -213,6 +213,9 @@ class SignatureTest extends TestCase
      */
     private function createTestOrder(): Order
     {
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create a quote first
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -221,7 +224,7 @@ class SignatureTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 205000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -233,6 +236,9 @@ class SignatureTest extends TestCase
             'Idempotency-Key' => 'test-'.uniqid(),
         ]);
 
+        // Ensure the order was created successfully
+        $response->assertStatus(201);
+        
         $orderId = $response->json('order_id');
 
         return Order::find($orderId);

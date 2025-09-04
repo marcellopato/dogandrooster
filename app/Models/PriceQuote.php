@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class PriceQuote extends Model
 {
@@ -39,9 +39,9 @@ class PriceQuote extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($quote) {
-            if (!$quote->quote_id) {
+            if (! $quote->quote_id) {
                 $quote->quote_id = Str::uuid()->toString();
             }
         });
@@ -85,14 +85,14 @@ class PriceQuote extends Model
     public function isWithinTolerance(): bool
     {
         $product = Product::where('sku', $this->sku)->first();
-        
-        if (!$product) {
+
+        if (! $product) {
             return false;
         }
 
         $currentSpotPrice = SpotPrice::getCurrent($product->metal_type);
-        
-        if (!$currentSpotPrice) {
+
+        if (! $currentSpotPrice) {
             return false;
         }
 
@@ -109,14 +109,14 @@ class PriceQuote extends Model
     public static function createForProduct(string $sku, int $quantity): self
     {
         $product = Product::where('sku', $sku)->where('active', true)->first();
-        
-        if (!$product) {
+
+        if (! $product) {
             throw new \Exception("Product not found or inactive: {$sku}");
         }
 
         $spotPrice = SpotPrice::getCurrent($product->metal_type);
-        
-        if (!$spotPrice) {
+
+        if (! $spotPrice) {
             throw new \Exception("No current spot price for {$product->metal_type}");
         }
 

@@ -31,4 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'payment' => [
+        'webhook_secret' => env('PAYMENT_WEBHOOK_SECRET', 'test_webhook_secret'),
+    ],
+
 ];

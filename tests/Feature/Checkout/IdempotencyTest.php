@@ -4,7 +4,6 @@ namespace Tests\Feature\Checkout;
 
 use App\Models\Order;
 use App\Models\PriceQuote;
-use App\Models\Product;
 use App\Models\SpotPrice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -17,22 +16,8 @@ class IdempotencyTest extends TestCase
     {
         parent::setUp();
 
-        // Create test data
-        Product::create([
-            'sku' => 'GOLD_1OZ',
-            'name' => 'Gold 1 Ounce Coin',
-            'metal_type' => 'gold',
-            'weight_oz' => '1.0000',
-            'premium_cents' => 5000,
-            'active' => true,
-        ]);
-
-        SpotPrice::create([
-            'metal_type' => 'gold',
-            'price_per_oz_cents' => 200000,
-            'effective_at' => now(),
-            'is_current' => true,
-        ]);
+        // Seed the database with test data
+        $this->seed();
 
         // Mock fulfillment API to return available stock
         $this->mockFulfillmentAvailability('GOLD_1OZ', 10);
@@ -41,6 +26,9 @@ class IdempotencyTest extends TestCase
     /** @test */
     public function it_returns_same_order_for_duplicate_idempotency_key()
     {
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create a valid quote
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -49,7 +37,7 @@ class IdempotencyTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 205000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -63,7 +51,7 @@ class IdempotencyTest extends TestCase
             'Idempotency-Key' => $idempotencyKey,
         ]);
 
-        $response1->assertStatus(200);
+        $response1->assertStatus(201);
         $firstOrderId = $response1->json('order_id');
         $firstPaymentIntentId = $response1->json('payment_intent_id');
 
@@ -89,6 +77,9 @@ class IdempotencyTest extends TestCase
     /** @test */
     public function it_creates_different_orders_for_different_idempotency_keys()
     {
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create two valid quotes
         $quote1 = PriceQuote::create([
             'quote_id' => 'test-quote-1-'.uniqid(),
@@ -97,7 +88,7 @@ class IdempotencyTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 205000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -109,7 +100,7 @@ class IdempotencyTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 205000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -128,8 +119,8 @@ class IdempotencyTest extends TestCase
             'Idempotency-Key' => 'test-idempotency-2-'.uniqid(),
         ]);
 
-        $response1->assertStatus(200);
-        $response2->assertStatus(200);
+        $response1->assertStatus(201);
+        $response2->assertStatus(201);
 
         $firstOrderId = $response1->json('order_id');
         $secondOrderId = $response2->json('order_id');
@@ -144,6 +135,9 @@ class IdempotencyTest extends TestCase
     /** @test */
     public function it_handles_concurrent_requests_with_same_idempotency_key()
     {
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create a valid quote
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -152,7 +146,7 @@ class IdempotencyTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 205000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -173,7 +167,7 @@ class IdempotencyTest extends TestCase
         ]);
 
         // Both should succeed
-        $response1->assertStatus(200);
+        $response1->assertStatus(201);
         $response2->assertStatus(200);
 
         // Should return the same order ID
@@ -189,6 +183,9 @@ class IdempotencyTest extends TestCase
     /** @test */
     public function it_enforces_idempotency_across_different_quote_ids()
     {
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create two different quotes
         $quote1 = PriceQuote::create([
             'quote_id' => 'test-quote-1-'.uniqid(),
@@ -197,7 +194,7 @@ class IdempotencyTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 205000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -209,7 +206,7 @@ class IdempotencyTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 410000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -230,7 +227,7 @@ class IdempotencyTest extends TestCase
             'Idempotency-Key' => $idempotencyKey,
         ]);
 
-        $response1->assertStatus(200);
+        $response1->assertStatus(201);
         $response2->assertStatus(200);
 
         // Should return the same order (from first request)

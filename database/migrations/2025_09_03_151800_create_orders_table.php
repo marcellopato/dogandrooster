@@ -17,16 +17,16 @@ return new class extends Migration
             $table->string('idempotency_key')->unique();
             $table->uuid('quote_id');
             $table->enum('status', ['pending', 'authorized', 'captured', 'failed'])
-                  ->default('pending');
+                ->default('pending');
             $table->integer('total_cents'); // Total order amount in cents
             $table->string('payment_intent_id')->nullable();
             $table->timestamps();
-            
+
             $table->index(['order_id']);
             $table->index(['status', 'created_at']);
             $table->index(['idempotency_key']);
             $table->index(['payment_intent_id']);
-            
+
             $table->foreign('quote_id')->references('quote_id')->on('price_quotes');
         });
     }

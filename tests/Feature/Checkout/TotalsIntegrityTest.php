@@ -18,38 +18,8 @@ class TotalsIntegrityTest extends TestCase
     {
         parent::setUp();
 
-        // Create test data
-        Product::create([
-            'sku' => 'GOLD_1OZ',
-            'name' => 'Gold 1 Ounce Coin',
-            'metal_type' => 'gold',
-            'weight_oz' => '1.0000',
-            'premium_cents' => 5000,
-            'active' => true,
-        ]);
-
-        Product::create([
-            'sku' => 'SILVER_1OZ',
-            'name' => 'Silver 1 Ounce Coin',
-            'metal_type' => 'silver',
-            'weight_oz' => '1.0000',
-            'premium_cents' => 300,
-            'active' => true,
-        ]);
-
-        SpotPrice::create([
-            'metal_type' => 'gold',
-            'price_per_oz_cents' => 200000,
-            'effective_at' => now(),
-            'is_current' => true,
-        ]);
-
-        SpotPrice::create([
-            'metal_type' => 'silver',
-            'price_per_oz_cents' => 2500,
-            'effective_at' => now(),
-            'is_current' => true,
-        ]);
+        // Seed the database with test data
+        $this->seed();
 
         // Mock fulfillment API
         $this->mockFulfillmentAvailability('GOLD_1OZ', 10);
@@ -59,6 +29,9 @@ class TotalsIntegrityTest extends TestCase
     /** @test */
     public function it_ensures_order_total_equals_sum_of_order_lines_subtotals()
     {
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create a quote for 3 gold coins
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -67,7 +40,7 @@ class TotalsIntegrityTest extends TestCase
             'unit_price_cents' => 205000, // $2050 per coin
             'total_price_cents' => 615000, // $6150 for 3 coins
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -78,7 +51,7 @@ class TotalsIntegrityTest extends TestCase
             'Idempotency-Key' => 'test-'.uniqid(),
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $orderId = $response->json('order_id');
         $order = Order::find($orderId);
@@ -96,6 +69,9 @@ class TotalsIntegrityTest extends TestCase
     /** @test */
     public function it_ensures_order_line_subtotal_equals_unit_price_times_quantity()
     {
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create a quote for 5 gold coins
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -104,7 +80,7 @@ class TotalsIntegrityTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 1025000, // 5 * 205000
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -115,7 +91,7 @@ class TotalsIntegrityTest extends TestCase
             'Idempotency-Key' => 'test-'.uniqid(),
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $orderId = $response->json('order_id');
         $orderLine = OrderLine::where('order_id', $orderId)->first();
@@ -129,6 +105,9 @@ class TotalsIntegrityTest extends TestCase
     /** @test */
     public function it_maintains_integrity_with_single_item_orders()
     {
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create a quote for 1 gold coin
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -137,7 +116,7 @@ class TotalsIntegrityTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 205000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -148,7 +127,7 @@ class TotalsIntegrityTest extends TestCase
             'Idempotency-Key' => 'test-'.uniqid(),
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $orderId = $response->json('order_id');
         $order = Order::find($orderId);
@@ -166,6 +145,9 @@ class TotalsIntegrityTest extends TestCase
     /** @test */
     public function it_maintains_integrity_with_different_product_types()
     {
+        // Get the silver spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'silver')->first();
+
         // Create a quote for silver coins (different pricing)
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -174,7 +156,7 @@ class TotalsIntegrityTest extends TestCase
             'unit_price_cents' => 2800, // $28 per silver coin (2500 + 300 premium)
             'total_price_cents' => 28000, // $280 for 10 coins
             'basis_spot_cents' => 2500,
-            'basis_version' => 2,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -185,7 +167,7 @@ class TotalsIntegrityTest extends TestCase
             'Idempotency-Key' => 'test-'.uniqid(),
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $orderId = $response->json('order_id');
         $order = Order::find($orderId);
@@ -204,6 +186,9 @@ class TotalsIntegrityTest extends TestCase
     /** @test */
     public function it_maintains_integrity_with_large_quantities()
     {
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create a quote for a large quantity
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -212,7 +197,7 @@ class TotalsIntegrityTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 20500000, // 100 * 205000
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -226,7 +211,7 @@ class TotalsIntegrityTest extends TestCase
             'Idempotency-Key' => 'test-'.uniqid(),
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $orderId = $response->json('order_id');
         $order = Order::find($orderId);
@@ -245,6 +230,9 @@ class TotalsIntegrityTest extends TestCase
     /** @test */
     public function it_ensures_no_rounding_errors_in_calculations()
     {
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Test with a price that might cause rounding issues if using floats
         SpotPrice::where('metal_type', 'gold')->update([
             'price_per_oz_cents' => 199999, // $1999.99 - edge case pricing
@@ -257,7 +245,7 @@ class TotalsIntegrityTest extends TestCase
             'unit_price_cents' => 204999, // 199999 + 5000 premium
             'total_price_cents' => 1434993, // 7 * 204999
             'basis_spot_cents' => 199999,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -268,7 +256,7 @@ class TotalsIntegrityTest extends TestCase
             'Idempotency-Key' => 'test-'.uniqid(),
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $orderId = $response->json('order_id');
         $order = Order::find($orderId);

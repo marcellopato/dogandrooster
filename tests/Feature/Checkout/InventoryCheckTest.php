@@ -6,6 +6,7 @@ use App\Models\PriceQuote;
 use App\Models\Product;
 use App\Models\SpotPrice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class InventoryCheckTest extends TestCase
@@ -16,22 +17,8 @@ class InventoryCheckTest extends TestCase
     {
         parent::setUp();
 
-        // Create test data
-        Product::create([
-            'sku' => 'GOLD_1OZ',
-            'name' => 'Gold 1 Ounce Coin',
-            'metal_type' => 'gold',
-            'weight_oz' => '1.0000',
-            'premium_cents' => 5000,
-            'active' => true,
-        ]);
-
-        SpotPrice::create([
-            'metal_type' => 'gold',
-            'price_per_oz_cents' => 200000,
-            'effective_at' => now(),
-            'is_current' => true,
-        ]);
+        // Seed the database with test data
+        $this->seed();
     }
 
     /** @test */
@@ -39,6 +26,9 @@ class InventoryCheckTest extends TestCase
     {
         // Set insufficient inventory
         $this->mockFulfillmentAvailability('GOLD_1OZ', 0);
+
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
 
         // Create a valid quote for 1 item
         $quote = PriceQuote::create([
@@ -48,7 +38,7 @@ class InventoryCheckTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 205000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -71,6 +61,9 @@ class InventoryCheckTest extends TestCase
         // Set inventory to 5 items
         $this->mockFulfillmentAvailability('GOLD_1OZ', 5);
 
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create a quote for 10 items (more than available)
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -79,7 +72,7 @@ class InventoryCheckTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 2050000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -102,6 +95,9 @@ class InventoryCheckTest extends TestCase
         // Set sufficient inventory
         $this->mockFulfillmentAvailability('GOLD_1OZ', 10);
 
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create a quote for 5 items (less than available)
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -110,7 +106,7 @@ class InventoryCheckTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 1025000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -121,7 +117,7 @@ class InventoryCheckTest extends TestCase
             'Idempotency-Key' => 'test-'.uniqid(),
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
     }
 
     /** @test */
@@ -129,6 +125,9 @@ class InventoryCheckTest extends TestCase
     {
         // Set inventory to exact requested amount
         $this->mockFulfillmentAvailability('GOLD_1OZ', 3);
+
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
 
         // Create a quote for exactly 3 items
         $quote = PriceQuote::create([
@@ -138,7 +137,7 @@ class InventoryCheckTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 615000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -149,13 +148,17 @@ class InventoryCheckTest extends TestCase
             'Idempotency-Key' => 'test-'.uniqid(),
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
     }
 
     /** @test */
     public function it_handles_fulfillment_api_errors_as_out_of_stock()
     {
-        // Don't set any mock availability (simulates API error)
+        // Clear any mock availability to simulate API error
+        Cache::forget('mock_inventory');
+
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
 
         // Create a valid quote
         $quote = PriceQuote::create([
@@ -165,7 +168,7 @@ class InventoryCheckTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 205000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);
@@ -189,6 +192,9 @@ class InventoryCheckTest extends TestCase
         // Set insufficient inventory
         $this->mockFulfillmentAvailability('GOLD_1OZ', 0);
 
+        // Get the spot price created in setUp
+        $spotPrice = SpotPrice::where('metal_type', 'gold')->first();
+
         // Create a valid quote
         $quote = PriceQuote::create([
             'quote_id' => 'test-quote-'.uniqid(),
@@ -197,7 +203,7 @@ class InventoryCheckTest extends TestCase
             'unit_price_cents' => 205000,
             'total_price_cents' => 205000,
             'basis_spot_cents' => 200000,
-            'basis_version' => 1,
+            'basis_version' => $spotPrice->id,
             'tolerance_bps' => 50,
             'quote_expires_at' => now()->addMinutes(5),
         ]);

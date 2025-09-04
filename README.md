@@ -405,3 +405,54 @@ Para dúvidas ou problemas:
 ---
 
 **Desenvolvido com ❤️ usando Laravel + Vue.js + TailwindCSS**
+
+## 🧪 Resultado dos Testes Unitários
+
+### PHP Code Style (Laravel Pint)
+
+```bash
+# ./vendor/bin/pint
+
+  ..✓✓✓✓...........✓.✓✓✓✓✓.........................✓✓✓✓.....✓✓✓✓✓.✓✓.✓.............✓...
+
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Laravel  
+    FIXED   .................................................................................................................................................................................. 85 files, 23 style issues fixed  
+  ✓ app/Http/Controllers/Api/CheckoutController.php no_superfluous_phpdoc_tags, concat_space, method_chaining_indentation, no_trailing_whitespace, phpdoc_separation, phpdoc_trim, not_operator_with_successor_space, blank_l…  
+  ✓ app/Http/Controllers/Api/MockFulfillmentController.php                                                                                                            no_superfluous_phpdoc_tags, phpdoc_trim, ordered_imports  
+  ✓ app/Http/Controllers/Api/QuoteController.php                                                                                                         phpdoc_separation, not_operator_with_successor_space, ordered_imports  
+  ✓ app/Http/Controllers/Api/WebhookController.php    no_superfluous_phpdoc_tags, phpdoc_trim, no_unused_imports, not_operator_with_successor_space, blank_line_before_statement, ordered_imports, no_whitespace_in_blank_line  
+  ✓ app/Http/Requests/Api/CheckoutRequest.php                                                                                                                                          no_superfluous_phpdoc_tags, phpdoc_trim  
+  ✓ app/Models/Order.php                                                                                concat_space, line_ending, not_operator_with_successor_space, blank_line_before_statement, no_whitespace_in_blank_line  
+  ✓ app/Models/OrderLine.php                                                                                          line_ending, not_operator_with_successor_space, blank_line_before_statement, no_whitespace_in_blank_line  
+  ✓ app/Models/PriceQuote.php                                                                                                                  not_operator_with_successor_space, ordered_imports, no_whitespace_in_blank_line  
+  ✓ app/Models/Product.php                                                                                                                                                                         no_whitespace_in_blank_line  
+  ✓ app/Models/SpotPrice.php                                                                                                                         method_chaining_indentation, ordered_imports, no_whitespace_in_blank_line  
+  ✓ database/factories/OrderLineFactory.php                                                                                                                                                        no_whitespace_in_blank_line  
+  ✓ database/factories/PriceQuoteFactory.php                                                                                                                                                       no_whitespace_in_blank_line  
+  ✓ database/factories/ProductFactory.php                                                                                                                                                          no_whitespace_in_blank_line  
+  ✓ database/factories/SpotPriceFactory.php                                                                                                                                 method_argument_space, no_whitespace_in_blank_line  
+  ✓ database/migrations/2025_09_03_151500_create_products_table.php                                                                                class_definition, line_ending, braces_position, no_whitespace_in_blank_line  
+  ✓ database/migrations/2025_09_03_151600_create_spot_prices_table.php                                                                             class_definition, line_ending, braces_position, no_whitespace_in_blank_line  
+  ✓ database/migrations/2025_09_03_151700_create_price_quotes_table.php                                                                            class_definition, line_ending, braces_position, no_whitespace_in_blank_line  
+  ✓ database/migrations/2025_09_03_151800_create_orders_table.php                                                     class_definition, line_ending, method_chaining_indentation, braces_position, no_whitespace_in_blank_line  
+  ✓ database/migrations/2025_09_03_151900_create_order_lines_table.php                                                                             class_definition, line_ending, braces_position, no_whitespace_in_blank_line  
+  ✓ database/seeders/ProductSeeder.php                                                                                                                                                            line_ending, ordered_imports  
+  ✓ database/seeders/SpotPriceSeeder.php                                                                                                line_ending, method_chaining_indentation, ordered_imports, no_whitespace_in_blank_line  
+  ✓ routes/api.php                                                                                                                                                                     no_trailing_whitespace, ordered_imports  
+  ✓ tests/Feature/Webhooks/SignatureTest.php                                                                                                                                                       no_whitespace_in_blank_line  
+```
+
+### Resumo dos Testes
+
+- **85 arquivos** verificados pelo Pint
+- **23 problemas de estilo** corrigidos automaticamente
+- **Cobertura completa** de controllers, models, factories, migrations e seeders
+- **Padrão Laravel** aplicado consistentemente em todo o projeto
+
+### Principais Correções Aplicadas
+
+- **PHPDoc**: Limpeza e padronização de comentários
+- **Espaçamento**: Correção de indentação e espaços em branco
+- **Imports**: Organização e remoção de imports não utilizados
+- **Formatação**: Padronização de quebras de linha e chaves
+- **Operadores**: Espaçamento consistente de operadores

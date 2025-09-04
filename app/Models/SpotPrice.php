@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 
 class SpotPrice extends Model
 {
@@ -29,16 +29,18 @@ class SpotPrice extends Model
     public static function getCurrent(string $metalType): ?self
     {
         return self::where('metal_type', $metalType)
-                   ->where('is_current', true)
-                   ->first();
+            ->where('is_current', true)
+            ->first();
     }
 
     /**
-     * Get the latest spot price (most recent)
+     * Get the latest spot price (current)
      */
     public static function getLatest(): ?self
     {
-        return self::orderBy('effective_at', 'desc')->first();
+        return self::where('is_current', true)
+            ->orderBy('effective_at', 'desc')
+            ->first();
     }
 
     /**
@@ -50,7 +52,7 @@ class SpotPrice extends Model
         self::where('metal_type', $this->metal_type)
             ->where('id', '!=', $this->id)
             ->update(['is_current' => false]);
-        
+
         // Then mark this one as current
         $this->update(['is_current' => true]);
     }
@@ -60,15 +62,15 @@ class SpotPrice extends Model
      */
     public function calculateBasisPointsDiff(int $otherPriceCents): int
     {
-        if ($this->price_per_oz_cents === 0) {
+        if ($otherPriceCents === 0) {
             return 0;
         }
 
-        // Basis points = (new_price - old_price) / old_price * 10000
-        $difference = $otherPriceCents - $this->price_per_oz_cents;
-        
-        // Using integer math: (diff * 10000) / original_price
-        return intval(bcdiv(bcmul($difference, '10000', 0), $this->price_per_oz_cents, 0));
+        // Basis points = (current_price - basis_price) / basis_price * 10000
+        $difference = $this->price_per_oz_cents - $otherPriceCents;
+
+        // Using integer math: (diff * 10000) / basis_price
+        return intval(($difference * 10000) / $otherPriceCents);
     }
 
     /**

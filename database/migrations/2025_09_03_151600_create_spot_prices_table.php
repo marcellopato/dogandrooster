@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('effective_at'); // When this price became effective
             $table->boolean('is_current')->default(false); // Only one current price per metal
             $table->timestamps();
-            
+
             $table->index(['metal_type', 'is_current']);
             $table->index(['metal_type', 'effective_at']);
             $table->unique(['metal_type', 'is_current'], 'unique_current_spot_price');
