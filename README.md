@@ -259,6 +259,104 @@ if (!hash_equals($signature, $providedSignature)) {
 - Frequência de requotes por tolerância
 - Disponibilidade do serviço de fulfillment
 
+## 🧪 Testes Implementados
+
+### Testes Unitários
+
+#### **IntegerMoneyTest** (`tests/Unit/Pricing/`)
+Garante que todos os cálculos de preço usam apenas matemática de inteiros (centavos):
+- ✅ Verifica que `unit_price_cents` é sempre inteiro
+- ✅ Testa cálculos com pesos fracionários (0.5 oz)
+- ✅ Valida múltiplas quantidades
+- ✅ Previne problemas de ponto flutuante
+
+### Testes de Feature
+
+#### **QuoteExpiryTest** (`tests/Feature/Checkout/`)
+Testa expiração de cotações com erro `REQUOTE_REQUIRED`:
+- ✅ Rejeita cotações expiradas (409)
+- ✅ Aceita cotações válidas
+- ✅ Trata tempo exato de expiração como expirado
+- ✅ Manipula tempo UTC corretamente
+
+#### **ToleranceBreachTest** (`tests/Feature/Checkout/`)
+Valida tolerância de movimento do preço spot:
+- ✅ Rejeita quando spot move além da tolerância (409)
+- ✅ Aceita movimento dentro da tolerância
+- ✅ Testa aumentos e diminuições de preço
+- ✅ Calcula basis points corretamente
+
+#### **IdempotencyTest** (`tests/Feature/Checkout/`)
+Garante idempotência com `Idempotency-Key`:
+- ✅ Retorna mesmo `order_id` para chave duplicada
+- ✅ Cria ordens diferentes para chaves diferentes
+- ✅ Manipula requisições concorrentes
+- ✅ Funciona através de diferentes `quote_id`
+
+#### **InventoryCheckTest** (`tests/Feature/Checkout/`)
+Valida verificação de estoque com erro `OUT_OF_STOCK`:
+- ✅ Rejeita quando estoque insuficiente (409)
+- ✅ Rejeita quando quantidade > estoque
+- ✅ Aceita quando quantidade ≤ estoque
+- ✅ Trata erros da API como falta de estoque
+- ✅ Não cria ordens quando falha verificação
+
+#### **SignatureTest** (`tests/Feature/Webhooks/`)
+Testa webhooks com HMAC válido:
+- ✅ Processa `payment_authorized` → status `authorized`
+- ✅ Processa `payment_captured` apenas de `authorized` → `captured`
+- ✅ Rejeita transições ilegais de status
+- ✅ Aceita eventos não suportados sem erro
+- ✅ Rejeita assinatura inválida ou intent desconhecido
+
+#### **InvalidSignatureTest** (`tests/Feature/Webhooks/`)
+Garante retorno de 400 e nenhuma mudança de estado:
+- ✅ Assinatura completamente inválida
+- ✅ Payload adulterado após assinatura
+- ✅ Assinatura malformada (não hex)
+- ✅ Intent desconhecido com assinatura válida
+- ✅ Múltiplas tentativas inválidas preservam estado
+
+#### **TotalsIntegrityTest** (`tests/Feature/Checkout/`)
+Verifica integridade de totais e cálculos:
+- ✅ `orders.total_cents == sum(order_lines.subtotal_cents)`
+- ✅ `order_lines.subtotal_cents == unit_price_cents * quantity`
+- ✅ Funciona com itens únicos e múltiplos
+- ✅ Testa diferentes tipos de produto
+- ✅ Valida grandes quantidades sem erro de arredondamento
+
+### Execução dos Testes
+
+```bash
+# Todos os testes
+docker exec dogandrooster-laravel.test-1 php artisan test
+
+# Apenas testes unitários
+docker exec dogandrooster-laravel.test-1 php artisan test --testsuite=Unit
+
+# Apenas testes de feature
+docker exec dogandrooster-laravel.test-1 php artisan test --testsuite=Feature
+
+# Teste específico
+docker exec dogandrooster-laravel.test-1 php artisan test tests/Unit/Pricing/IntegerMoneyTest.php
+
+# Com cobertura (se configurado)
+docker exec dogandrooster-laravel.test-1 php artisan test --coverage
+```
+
+### Verificação de Qualidade
+
+```bash
+# Laravel Pint (Style)
+docker exec dogandrooster-laravel.test-1 php ./vendor/bin/pint
+
+# Larastan (Static Analysis)
+docker exec dogandrooster-laravel.test-1 php ./vendor/bin/phpstan analyse --level=6
+
+# Executar todos juntos
+docker exec dogandrooster-laravel.test-1 bash -c "php ./vendor/bin/pint && php ./vendor/bin/phpstan analyse --level=6 && php artisan test"
+```
+
 ## 🚧 Melhorias Futuras
 
 ### Com Mais Tempo

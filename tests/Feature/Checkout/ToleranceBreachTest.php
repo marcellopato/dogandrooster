@@ -1,0 +1,226 @@
+<?php
+
+namespace Tests\Feature\Checkout;
+
+use App\Models\PriceQuote;
+use App\Models\Product;
+use App\Models\SpotPrice;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ToleranceBreachTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Create test data
+        Product::create([
+            'sku' => 'GOLD_1OZ',
+            'name' => 'Gold 1 Ounce Coin',
+            'metal_type' => 'gold',
+            'weight_oz' => '1.0000',
+            'premium_cents' => 5000,
+            'active' => true,
+        ]);
+    }
+
+    /** @test */
+    public function it_rejects_quotes_when_spot_moves_beyond_tolerance()
+    {
+        // Create initial spot price of $2000
+        $initialSpotPrice = SpotPrice::create([
+            'metal_type' => 'gold',
+            'price_per_oz_cents' => 200000,
+            'effective_at' => now()->subMinutes(10),
+            'is_current' => false,
+        ]);
+
+        // Create a quote based on this spot price with 50 bps tolerance
+        $quote = PriceQuote::create([
+            'quote_id' => 'test-quote-'.uniqid(),
+            'sku' => 'GOLD_1OZ',
+            'quantity' => 1,
+            'unit_price_cents' => 205000,
+            'total_price_cents' => 205000,
+            'basis_spot_cents' => 200000,
+            'basis_version' => $initialSpotPrice->id,
+            'tolerance_bps' => 50, // 0.5% tolerance
+            'quote_expires_at' => now()->addMinutes(5),
+        ]);
+
+        // Update spot price to move beyond tolerance (more than 0.5% increase)
+        // 50 bps = 0.5% of 200000 = 1000 cents
+        // So 201001 cents should breach the tolerance
+        SpotPrice::create([
+            'metal_type' => 'gold',
+            'price_per_oz_cents' => 201001, // Moved up by 1001 cents (> 50 bps)
+            'effective_at' => now(),
+            'is_current' => true,
+        ]);
+
+        $response = $this->postJson('/api/checkout', [
+            'quote_id' => $quote->quote_id,
+        ], [
+            'Idempotency-Key' => 'test-'.uniqid(),
+        ]);
+
+        $response->assertStatus(409)
+            ->assertJson([
+                'error' => 'REQUOTE_REQUIRED',
+            ]);
+    }
+
+    /** @test */
+    public function it_accepts_quotes_when_spot_moves_within_tolerance()
+    {
+        // Mock fulfillment API to return available stock
+        $this->mockFulfillmentAvailability('GOLD_1OZ', 10);
+
+        // Create initial spot price
+        $initialSpotPrice = SpotPrice::create([
+            'metal_type' => 'gold',
+            'price_per_oz_cents' => 200000,
+            'effective_at' => now()->subMinutes(10),
+            'is_current' => false,
+        ]);
+
+        // Create a quote with 50 bps tolerance
+        $quote = PriceQuote::create([
+            'quote_id' => 'test-quote-'.uniqid(),
+            'sku' => 'GOLD_1OZ',
+            'quantity' => 1,
+            'unit_price_cents' => 205000,
+            'total_price_cents' => 205000,
+            'basis_spot_cents' => 200000,
+            'basis_version' => $initialSpotPrice->id,
+            'tolerance_bps' => 50,
+            'quote_expires_at' => now()->addMinutes(5),
+        ]);
+
+        // Update spot price to move within tolerance (less than 0.5%)
+        // 50 bps = 0.5% of 200000 = 1000 cents
+        // So 200999 cents should be within tolerance
+        SpotPrice::create([
+            'metal_type' => 'gold',
+            'price_per_oz_cents' => 200999, // Moved up by 999 cents (< 50 bps)
+            'effective_at' => now(),
+            'is_current' => true,
+        ]);
+
+        $response = $this->postJson('/api/checkout', [
+            'quote_id' => $quote->quote_id,
+        ], [
+            'Idempotency-Key' => 'test-'.uniqid(),
+        ]);
+
+        $response->assertStatus(200);
+    }
+
+    /** @test */
+    public function it_handles_spot_price_decreases_beyond_tolerance()
+    {
+        // Create initial spot price
+        $initialSpotPrice = SpotPrice::create([
+            'metal_type' => 'gold',
+            'price_per_oz_cents' => 200000,
+            'effective_at' => now()->subMinutes(10),
+            'is_current' => false,
+        ]);
+
+        // Create a quote
+        $quote = PriceQuote::create([
+            'quote_id' => 'test-quote-'.uniqid(),
+            'sku' => 'GOLD_1OZ',
+            'quantity' => 1,
+            'unit_price_cents' => 205000,
+            'total_price_cents' => 205000,
+            'basis_spot_cents' => 200000,
+            'basis_version' => $initialSpotPrice->id,
+            'tolerance_bps' => 50,
+            'quote_expires_at' => now()->addMinutes(5),
+        ]);
+
+        // Update spot price to decrease beyond tolerance
+        // 50 bps = 0.5% of 200000 = 1000 cents
+        // So 198999 cents should breach the tolerance (decrease of 1001 cents)
+        SpotPrice::create([
+            'metal_type' => 'gold',
+            'price_per_oz_cents' => 198999,
+            'effective_at' => now(),
+            'is_current' => true,
+        ]);
+
+        $response = $this->postJson('/api/checkout', [
+            'quote_id' => $quote->quote_id,
+        ], [
+            'Idempotency-Key' => 'test-'.uniqid(),
+        ]);
+
+        $response->assertStatus(409)
+            ->assertJson([
+                'error' => 'REQUOTE_REQUIRED',
+            ]);
+    }
+
+    /** @test */
+    public function it_calculates_tolerance_correctly_for_different_basis_points()
+    {
+        // Create initial spot price
+        $initialSpotPrice = SpotPrice::create([
+            'metal_type' => 'gold',
+            'price_per_oz_cents' => 200000,
+            'effective_at' => now()->subMinutes(10),
+            'is_current' => false,
+        ]);
+
+        // Create a quote with 100 bps (1%) tolerance
+        $quote = PriceQuote::create([
+            'quote_id' => 'test-quote-'.uniqid(),
+            'sku' => 'GOLD_1OZ',
+            'quantity' => 1,
+            'unit_price_cents' => 205000,
+            'total_price_cents' => 205000,
+            'basis_spot_cents' => 200000,
+            'basis_version' => $initialSpotPrice->id,
+            'tolerance_bps' => 100, // 1% tolerance
+            'quote_expires_at' => now()->addMinutes(5),
+        ]);
+
+        // Update spot price to move exactly at tolerance boundary
+        // 100 bps = 1% of 200000 = 2000 cents
+        // So 202000 cents should be exactly at tolerance
+        SpotPrice::create([
+            'metal_type' => 'gold',
+            'price_per_oz_cents' => 202000,
+            'effective_at' => now(),
+            'is_current' => true,
+        ]);
+
+        $response = $this->postJson('/api/checkout', [
+            'quote_id' => $quote->quote_id,
+        ], [
+            'Idempotency-Key' => 'test-'.uniqid(),
+        ]);
+
+        // At the boundary should still be rejected
+        $response->assertStatus(409)
+            ->assertJson([
+                'error' => 'REQUOTE_REQUIRED',
+            ]);
+    }
+
+    /**
+     * Mock the fulfillment API availability response
+     */
+    private function mockFulfillmentAvailability(string $sku, int $availableQty): void
+    {
+        // Set mock fulfillment availability
+        $this->postJson('/api/mock-fulfillment/availability', [
+            'sku' => $sku,
+            'available_qty' => $availableQty,
+        ]);
+    }
+}
