@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SpotPriceSeeder::class,
             ProductSeeder::class,
+            InventorySeeder::class,
         ]);
     }
 }

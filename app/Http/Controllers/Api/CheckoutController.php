@@ -243,9 +243,8 @@ class CheckoutController extends Controller
     private function checkInventory(string $sku, int $quantity): array
     {
         try {
-            // In testing environment, check Cache directly to avoid HTTP complexity
-            if (app()->environment('testing')) {
-                // In testing environment, check Cache directly to avoid HTTP complexity
+            // Check cache first (for testing and local development)
+            if (app()->environment(['testing', 'local'])) {
                 if (Cache::has('mock_inventory')) {
                     $inventory = Cache::get('mock_inventory', []);
                     $availableQty = $inventory[$sku] ?? 0;

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Api;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 /**
  * Checkout request validation
@@ -41,6 +43,23 @@ class CheckoutRequest extends FormRequest
             'quote_id.string' => 'Quote ID must be a string',
             'quote_id.exists' => 'Quote not found',
         ];
+    }
+
+    /**
+     * Handle a failed validation attempt for API requests.
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(
+            response()->json(
+                [
+                    'error' => 'VALIDATION_FAILED',
+                    'message' => 'The given data was invalid.',
+                    'errors' => $validator->errors()
+                ], 
+                422
+            )
+        );
     }
 
     /**
