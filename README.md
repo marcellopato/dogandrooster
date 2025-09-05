@@ -62,10 +62,10 @@ composer install
 docker-compose up -d
 
 # Run migrations
-docker-compose exec laravel.test php artisan migrate
+docker exec dogandrooster-laravel.test-1 php artisan migrate
 
-# Run seeders (when available)
-docker-compose exec laravel.test php artisan db:seed
+# Run seeders (includes inventory setup)
+docker exec dogandrooster-laravel.test-1 php artisan db:seed
 ```
 
 ### 4. Configure Frontend
@@ -150,13 +150,13 @@ POST /api/mock-fulfillment/availability
 
 ```bash
 # All tests
-docker-compose exec laravel.test php artisan test
+docker exec dogandrooster-laravel.test-1 php artisan test
 
 # Specific tests
-docker-compose exec laravel.test php artisan test --filter=QuoteTest
+docker exec dogandrooster-laravel.test-1 php artisan test --filter=QuoteTest
 
 # With coverage
-docker-compose exec laravel.test php artisan test --coverage
+docker exec dogandrooster-laravel.test-1 php artisan test --coverage
 ```
 
 ### Implemented Tests
@@ -245,7 +245,61 @@ if (!hash_equals($signature, $providedSignature)) {
 - **API endpoints**: Throttling configured per IP/user
 - **Webhook endpoints**: Specific rate limiting
 
-## 📊 Monitoring and Logs
+## � Mock Inventory Setup
+
+The system uses a **cache-based mock inventory** to simulate the fulfillment partner API during development and testing.
+
+### Automatic Setup (Recommended)
+```bash
+# Run all seeders (includes InventorySeeder)
+docker exec dogandrooster-laravel.test-1 php artisan db:seed
+
+# Or run inventory seeder specifically
+docker exec dogandrooster-laravel.test-1 php artisan db:seed --class=InventorySeeder
+```
+
+### Manual Setup (If Needed)
+```bash
+# Via Tinker (for custom quantities)
+docker exec dogandrooster-laravel.test-1 php artisan tinker
+>>> Cache::put('mock_inventory', ['GOLD_1OZ' => 100, 'SILVER_1OZ' => 500, 'PLATINUM_1OZ' => 50])
+```
+
+### Default Inventory
+- **GOLD_1OZ**: 100 units
+- **SILVER_1OZ**: 500 units  
+- **PLATINUM_1OZ**: 50 units
+
+### Environment Behavior
+- **Local/Testing**: Uses cache directly for fast inventory checks
+- **Production**: Would use HTTP API calls to actual fulfillment partner
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### OUT_OF_STOCK Error
+**Problem**: Getting `{"error":"OUT_OF_STOCK"}` during checkout
+
+**Solution**: 
+```bash
+# Reset inventory
+docker exec dogandrooster-laravel.test-1 php artisan db:seed --class=InventorySeeder
+```
+
+#### 302 Redirect Instead of JSON
+**Problem**: API returning 302 redirects instead of JSON responses
+
+**Solution**: This was fixed in the codebase by updating:
+- `Authenticate` middleware to handle API routes properly
+- `CheckoutRequest` to return JSON validation errors instead of redirects
+
+#### Validation Errors
+**Problem**: `"Quote ID must be a string"` error
+
+**Solution**: Ensure the quote API is returning UUID strings, not numeric IDs. This has been fixed in `QuoteController`.
+
+## �📊 Monitoring and Logs
 
 ### Important Logs
 - **Fulfillment Calls**: `LOG::info('Checking inventory', ['sku' => $sku])`
@@ -381,10 +435,10 @@ docker exec dogandrooster-laravel.test-1 bash -c "php ./vendor/bin/pint && php .
 ### Code Style
 ```bash
 # Laravel Pint (PHP)
-docker-compose exec laravel.test ./vendor/bin/pint
+docker exec dogandrooster-laravel.test-1 ./vendor/bin/pint
 
 # Larastan (Static Analysis)
-docker-compose exec laravel.test ./vendor/bin/phpstan analyse
+docker exec dogandrooster-laravel.test-1 ./vendor/bin/phpstan analyse
 ```
 
 ## 📄 License
