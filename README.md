@@ -245,7 +245,7 @@ if (!hash_equals($signature, $providedSignature)) {
 - **API endpoints**: Throttling configured per IP/user
 - **Webhook endpoints**: Specific rate limiting
 
-## � Mock Inventory Setup
+## Mock Inventory Setup
 
 The system uses a **cache-based mock inventory** to simulate the fulfillment partner API during development and testing.
 
@@ -299,7 +299,7 @@ docker exec dogandrooster-laravel.test-1 php artisan db:seed --class=InventorySe
 
 **Solution**: Ensure the quote API is returning UUID strings, not numeric IDs. This has been fixed in `QuoteController`.
 
-## �📊 Monitoring and Logs
+## Monitoring and Logs
 
 ### Important Logs
 - **Fulfillment Calls**: `LOG::info('Checking inventory', ['sku' => $sku])`
@@ -453,8 +453,6 @@ For questions or issues:
 3. Consult API documentation at `/api/documentation`
 
 ---
-
-**Developed with ❤️ using Laravel + Vue.js + TailwindCSS**
 
 
 ### PHP Code Style (Laravel Pint)
@@ -626,8 +624,10 @@ For questions or issues:
 ✅ **Price Tolerance** - Basis points check for market volatility  
 ✅ **Inventory Check** - Integration with mock fulfillment API  
 ✅ **Idempotent Checkout** - Safe transactions with idempotency keys  
-✅ **Payment Webhooks** - HMAC verification and valid status transitions  
+✅ **Payment Webhooks** - HMAC verification and valid status 
+transitions  
 ✅ **Error Handling** - Correct HTTP codes and appropriate error messages  
 ✅ **Data Integrity** - Consistency of totals and mathematical calculations  
 
 
+**Developed with ❤️ using Laravel + Vue.js + TailwindCSS**
