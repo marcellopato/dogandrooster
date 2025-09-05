@@ -192,10 +192,19 @@ export default {
     }
 
     const resetQuote = () => {
+      // Reset all form fields to initial state
+      selectedSku.value = 'GOLD_1OZ'
+      quantity.value = 1
+      
+      // Reset all state variables
       currentQuote.value = null
       error.value = null
       success.value = null
       expired.value = false
+      loading.value = false
+      countdown.value = ''
+      
+      // Clear any running timers
       if (countdownInterval) {
         clearInterval(countdownInterval)
         countdownInterval = null
