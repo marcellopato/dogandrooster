@@ -107,7 +107,7 @@ class QuoteController extends Controller
             // Log::info(
             //     'Price quote generated',
             //     [
-            //         'quote_id' => $quote->id,
+            //         'quote_id' => $quote->quote_id,
             //         'sku' => $sku,
             //         'qty' => $qty,
             //         'unit_price_cents' => $unitPriceCents,
@@ -118,7 +118,7 @@ class QuoteController extends Controller
 
             return response()->json(
                 [
-                    'quote_id' => $quote->id,
+                    'quote_id' => $quote->quote_id,
                     'unit_price_cents' => $unitPriceCents,
                     'quote_expires_at' => $quote->quote_expires_at->toISOString(),
                 ]
