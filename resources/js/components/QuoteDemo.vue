@@ -81,6 +81,12 @@
         <!-- Success Display -->
         <div v-if="success" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4">
           {{ success }}
+          <button 
+            @click="resetQuote"
+            class="ml-2 bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-sm"
+          >
+            Get New Quote
+          </button>
         </div>
       </div>
     </div>
@@ -166,8 +172,15 @@ export default {
         const data = await response.json()
         
         if (response.ok) {
-          success.value = `Order created successfully! Order ID: ${data.order_id}`
-          resetQuote()
+          success.value = `Order created successfully! Order ID: ${data.order_id}, Payment Intent: ${data.payment_intent_id}, Total: $${(data.total_cents / 100).toFixed(2)}`
+          // Don't reset immediately - let user see the success message
+          // User can click "Get New Quote" to start over
+          currentQuote.value = null
+          expired.value = false
+          if (countdownInterval) {
+            clearInterval(countdownInterval)
+            countdownInterval = null
+          }
         } else {
           error.value = data.error || 'Checkout failed'
         }
